@@ -36,7 +36,8 @@ from config import leptonica_home
 lepton_source_dir = leptonica_home + "/src/"
 target_file = "leptonica_structures.py"
 
-# I am feeling quite intimidated by "parsers" at this time. let's do it by hand.
+# I am feeling quite intimidated by "parsers"
+# at this time. let's do it by hand.
 
 # from the "environ.h" file in leptonica source
 lepton_types = {
@@ -88,33 +89,35 @@ def separate_comments(in_list):
             if char == str_token and not inside_comment:
                 inside_string = not inside_string
             twochar = line[index:index+2]
-            if twochar == cs_token and not inside_string and not line_comment:
+            if (twochar == cs_token and
+                not inside_string and not line_comment):
                 multiline_comment = True
                 multi_start_index = index
-            elif twochar == ce_token and multiline_comment and  index - multi_start_index > 1:
+            elif (twochar == ce_token and multiline_comment and
+                index - multi_start_index > 1):
                 multiline_comment = False
                 spare = 2
-            elif twochar == cl_token and not inside_string and not multiline_comment:
+            elif (twochar == cl_token and not inside_string
+                and not multiline_comment):
                 line_comment = True
             inside_comment = line_comment or multiline_comment
             if not inside_comment and spare <= 0:
                 code_line += char
             else:
                 comment_line += char
-            
         comments.append(comment_line + "\n")
         code.append(code_line + "\n")
-    
     return code, comments
 
 
 def parse_structs(code):
     """
-    This can't parse generic C structs - it depends of a specifc formating
-    as the one found on leptonica 1.6 source files:
-     no nested structs are allowed
-     structs are always named
-     structs are not instantiated on declaration
+    This can't parse generic C structs - it depends of a 
+    specifc formating as the one found on leptonica 1.6
+    source files:
+    no nested structs are allowed
+    structs are always named
+    structs are not instantiated on declaration (and more)
     """
     tokens = "".join(code).split()
     struct_level = 0
@@ -131,7 +134,8 @@ def parse_structs(code):
             fwd = 1
         except StopIteration:
             break
-        if token == kwd and struct_level == 0 and tokens[index + 2] == "{":
+        if (token == kwd and struct_level == 0 and
+            tokens[index + 2] == "{"):
             bracket_level += 1
             struct_name = tokens[index + 1]
             struct_level = 1
@@ -145,7 +149,8 @@ def parse_structs(code):
         elif token[0] == "}":
             bracket_level -= 1
         if struct_level  and bracket_level == 0:
-            #use uppercase name: matching names used in lepton's typedefs
+            # use uppercase name: matching names used 
+            # in leptonica's typedefs
             structs[struct_name.upper()] = (struct_body, pre_reqs)
             struct_level = 0
             continue
@@ -153,7 +158,8 @@ def parse_structs(code):
             decl_line.append(token)
         if struct_level and token[-1] in (";", ","):
             sep = token[-1]
-            if len(token) == 1:   #avoid need for the separator to be joined to var_name
+            if len(token) == 1: #avoid need for the 
+                                #separator to be joined to var_name
                 decl_line.pop()
             var_name = decl_line[-1].strip(";").strip(",")
             if decl_line[0] == kwd:
@@ -168,12 +174,7 @@ def parse_structs(code):
                 decl_line = []
             else:
                 decl_line = [var_type]
-            
-            
     return structs    
-        
-
-
 
 class_template = '''
 class %(name)s(ctypes.Structure):
@@ -214,11 +215,13 @@ def render_class(struct_name, body, recursive=False):
             field_name = field_name[1:].strip()
             if data_type !=  lepton_types["void"] or indirections > 1:
                 data_type = "ctypes.POINTER(%s)" % data_type
-        rendered = field_template % {"name": field_name, "data_type": data_type}
+        rendered = field_template % {"name": field_name, 
+            "data_type": data_type}
         fields.append(rendered)
     rendered_fields = ",\n        ".join(fields)
-    text = template % {"name": struct_name, "comments": "Comments not generated",
-                              "rendered_fields": rendered_fields}
+    text = template % {"name": struct_name, 
+        "comments": "Comments not generated",
+        "rendered_fields": rendered_fields}
     return text
 
 def parse_file(file_name):
@@ -240,7 +243,8 @@ import ctypes
 
 """
 def render_file(class_list, alias_list):
-    aliases = "\n".join("%s = %s" % alias_pair for alias_pair in alias_list)
+    aliases = "\n".join("%s = %s" % alias_pair 
+        for alias_pair in alias_list)
     with open(target_file, "wt") as outfile:
         outfile.write(file_template % {"classes": "\n".join(class_list),
             "aliases": aliases} )
@@ -266,9 +270,11 @@ def order_classes(structs):
                 if count > 100:
                     sys.stderr.write(str(pre_reqs) + "\n\n")
                     sys.stderr.write(str(rendered) + "\n")
-                    raise Exception("Could not get Struct classes in order")
+                    raise Exception(
+                        "Could not get Struct classes in order")
                 continue
-            class_list.append(render_class(struct, structs[struct][0], recursive))
+            class_list.append(render_class(struct, structs[struct][0],
+                recursive))
             rendered.add(struct)
             del structs[struct]
         count += 1
@@ -291,7 +297,8 @@ def main(file_names):
 
 all_headers = ['bbuffer.h', 'dewarp.h', 'gplot.h', 'pix.h',
 'regutils.h', 'bmf.h', 'heap.h', 'ptra.h', 'stack.h', 'bmp.h',
-'list.h', 'queue.h', 'sudoku.h', 'array.h', 'ccbord.h', 'jbclass.h', 'morph.h', 'watershed.h']
+'list.h', 'queue.h', 'sudoku.h', 'array.h', 'ccbord.h', 'jbclass.h',
+'morph.h', 'watershed.h']
 
 
 if __name__ == "__main__":
