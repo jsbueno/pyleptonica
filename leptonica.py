@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import ctypes
-import struct
-from leptonica_structures import PIX
 
     
     # "pyleptonica" is a Python wrapper to Leptonica Library
@@ -20,7 +17,12 @@ from leptonica_structures import PIX
     #You should have received a copy of the Lesser GNU General Public License
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# from ctypes import c_* #invlaid python, so we do this:
+
+import ctypes
+import struct
+from leptonica_structures import PIX
+
+# from ctypes import c_* #invalid python, so we do this:
 globals().update((name, getattr(ctypes, name)) for name in dir(ctypes) if name.startswith("c_"))
 
 lep = ctypes.cdll.LoadLibrary( "liblept.so")
