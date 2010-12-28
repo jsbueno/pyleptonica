@@ -47,6 +47,7 @@ lepton_types = {
     "l_float64": "ctypes.c_double",
     "char": "ctypes.c_char",
     "void": "ctypes.c_void_p",
+    "size_t": "ctypes.c_size_t",
     "FILE": "ctypes.c_void_p"
     }
 

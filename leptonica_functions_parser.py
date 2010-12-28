@@ -136,6 +136,8 @@ def format_return_type(return_type):
     while return_type.endswith("*"):
         indirections += 1
         return_type = return_type[:-1].strip()
+    if return_type.startswith("const"):
+        return_type = return_type.split(None,1)[-1].strip()
     if return_type == "char" and indirections == 1:
         # Function automatically dealocates string returned by library
         # and creates a python string
@@ -154,6 +156,20 @@ def format_return_type(return_type):
                 return_type = "ctypes.POINTER(%s)" % return_type
     return return_type
 
+def format_args(arg_list):
+    final_args = []
+    for arg_type, arg_name in arg_list:
+        indirections = arg_name.count("*")
+        if arg_type.startswith("const"):
+            arg_type = arg_type.split(None,1)[-1].strip()
+        if arg_type in lepton_types:
+            arg_type = lepton_types[arg_type]
+        for i in xrange(indirections):
+            arg_type = "ctypes.POINTER(%s)" % arg_type
+        final_args.append(arg_type)
+    #TODO: the referenciation code for each argument must be generated here as well
+    return final_args
+    
 # indented to fit inside the generated classes
 function_template = '''
     leptonica.%(name)s.argtypes = [%(argtypes)s]
@@ -176,7 +192,8 @@ def render_functions(functions_dict):
         return_type = format_return_type(return_type)
         function_doc = "       \n".join("%s" % str(args) for args in arg_list) + "       \n" + function_doc
         # TODO: transform argument types into proper python names
-        argtypes = ", ".join(args[0] for args in arg_list)
+        final_args = format_args(arg_list)
+        argtypes = ", ".join(final_args)
         # TODO: generate the referenciation code
         
         functions.append (function_template %{
@@ -201,7 +218,7 @@ def render_modules(modules):
     for module in modules:
         module_doc = modules[module][0]
         functions_dict = modules[module][1]
-        classes["module"] = class_template % {"file_name": module,
+        classes[module] = class_template % {"file_name": module,
                             "docstring": module_doc, 
                             "functions": render_functions(functions_dict)
                             }
@@ -241,6 +258,7 @@ def main(file_names):
     #functions = modules[module_name][1]
     #for function in functions:
     #    print function, functions[function][1], functions[function][0]
-
+files = """gifio.c affine.c ptra.c shear.c skew.c arrayaccess.c
+""".split()
 if __name__ == "__main__":
-    main(["affine.c"])
+    main(files)
