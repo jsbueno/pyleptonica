@@ -27,6 +27,10 @@ from lepton_header_parser import lepton_types
 lepton_source_dir = "/home/gwidion/build/leptonlib-1.67/src/"
 target_file = "leptonica_functions.py"
 
+class FunctionNotExported(Exception):
+    pass
+
+
 def get_file_contents(file_name):
       infile = open(file_name)
       # This is different than what we ar doing for the header files
@@ -79,7 +83,7 @@ def parse_prototype(prototype_text):
     prototype = prototype_text.split("\n")
     counter = 0
     last_scaped = False
-    # ins ome files tehre may be some preprocessor
+    # in some files there may be some preprocessor
     # directives between the comment and the function start
     while True:
         line = prototype[counter].strip()
@@ -94,14 +98,33 @@ def parse_prototype(prototype_text):
     prototype = prototype[counter:]
     prototype_text = " ".join(prototype)
     return_type = prototype[0].strip()
+
     function_name = prototype[1].split("(")[0].strip()
+    if return_type.startswith("static"):
+        #print "Static function - not exported: ", function_name
+        raise FunctionNotExported
+    if function_name in NOT_EXPORTED:
+        raise FunctionNotExported
     parameters = []
     parameter_tokens = prototype_text.split("(",1)[-1].rsplit(")",1)[0].split(",")
     #print parameter_tokens
     for token in parameter_tokens:
-        if token.strip():
+        token = token.strip()
+        if not token:
+            continue
+        if token.startswith("/*"):
+            token = token.split("*/",1)[1].strip()
+        if "(" in token:
+            print "Unhandled parameter declaration - not exporting: ", function_name
+            raise FunctionNotExported
+        if token.strip() == "void":
+            break
+        try:
             data_type, name = token.rsplit(None,1)
-            parameters.append((data_type.strip(), name.strip()))
+        except Exception, error:
+            print prototype_text
+            raise
+        parameters.append((data_type.strip(), name.strip()))
     return return_type, function_name, parameters 
     
     
@@ -117,10 +140,17 @@ def parse_functions(text):
     doc_and_proto_expr = re.compile(r"^(\/\*\!.*?)^{", re.MULTILINE| re.DOTALL)
     doc_and_proto = doc_and_proto_expr.findall(text)
     for function in doc_and_proto:
-        raw_comment, prototype = function.split("*/")
+        try:
+            raw_comment, prototype = function.split("*/", 1)
+        except Exception, error:
+            print function
+            raise
         comment = strip_comment(raw_comment)
-        return_type, name, arg_list = parse_prototype(prototype)
-        functions[name] = (arg_list, return_type, comment)
+        try:
+            return_type, name, arg_list = parse_prototype(prototype)
+            functions[name] = (arg_list, return_type, comment)
+        except FunctionNotExported:
+            continue
     return functions
         
 
@@ -136,7 +166,9 @@ def format_return_type(return_type):
     while return_type.endswith("*"):
         indirections += 1
         return_type = return_type[:-1].strip()
-    if return_type.startswith("const") or return_type.startswith("static"):
+    if return_type.startswith("static"):
+        raise FunctionNotExported
+    if return_type.startswith("const"):
         return_type = return_type.split(None,1)[-1].strip()
     if return_type == "char" and indirections == 1:
         # Function automatically dealocates string returned by library
@@ -172,8 +204,11 @@ def format_args(arg_list):
     
 # indented to fit inside the generated classes
 function_template = '''
-    leptonica.%(name)s.argtypes = [%(argtypes)s]
-    leptonica.%(name)s.restype = %(restype)s
+    try:
+        leptonica.%(name)s.argtypes = [%(argtypes)s]
+        leptonica.%(name)s.restype = %(restype)s
+    except AttributeError:
+        os.stderr.write("Warning - function %(name)s not exported by libleptonica\\n\\tCalls to it won't work\\n")
     
     @staticmethod
     def %(name)s(*args):
@@ -189,7 +224,11 @@ function_template = '''
 def render_functions(functions_dict):
     functions = []
     for name, (arg_list, return_type, function_doc) in functions_dict.items():
-        return_type = format_return_type(return_type)
+        try:
+            return_type = format_return_type(return_type)
+        except FunctionNotExported:
+            print "Function %s not exported. verify" %name
+            continue
         function_doc = "       \n".join("%s" % str(args) for args in arg_list) + "       \n" + function_doc
         # TODO: transform argument types into proper python names
         final_args = format_args(arg_list)
@@ -225,6 +264,8 @@ def render_modules(modules):
     return classes
 
 file_template = """
+#coding: utf-8
+
 import ctypes
 from leptonica_structures import *
 
@@ -255,10 +296,47 @@ def main(file_names):
         modules[module_name] = parse_file(lepton_source_dir + file_name)
     classes = render_modules(modules)
     render_file(classes)
-    #functions = modules[module_name][1]
-    #for function in functions:
-    #    print function, functions[function][1], functions[function][0]
-files = """gifio.c affine.c ptra.c shear.c skew.c arrayaccess.c readfile.c 
-""".split() #grayquant.c failing
+
+files = ['adaptmap.c', 'colorcontent.c', 'fmorphgenlow.1.c', 
+'numafunc1.c', 'psio1stub.c', 'sel1.c', 'affine.c', 'colormap.c',
+'fpix1.c', 'numafunc2.c', 'psio2.c', 'sel2.c', 'affinecompose.c', 
+'colormorph.c', 'fpix2.c', 'pageseg.c', 'psio2stub.c', 'selgen.c',
+'arithlow.c', 'colorquant1.c', 'freetype.c', 'paintcmap.c',
+'ptabasic.c', 'shear.c', 'arrayaccess.c', 'colorquant2.c', 'gifio.c', 'parseprotos.c', 'ptafunc1.c', 'skew.c', 'arrayaccess.h.vc',
+'colorseg.c', 'gifiostub.c', 'partition.c', 'ptra.c',
+'spixio.c','bardecode.c', 'compare.c', 'gplot.c', 'pix1.c', 'queue.c',
+'stack.c', 'baseline.c', 'conncomp.c', 'graphics.c', 'pix2.c', 'rank.c',
+'sudoku.c', 'bbuffer.c', 'convertfiles.c', 'graymorph.c', 'pix3.c',
+'readbarcode.c', 'textops.c', 'bilinear.c', 'convolve.c',
+'graymorphlow.c', 'pix4.c', 'readfile.c', 'tiffio.c', 'binarize.c',
+'convolvelow.c', 'grayquant.c', 'pix5.c', 'regutils.c', 'tiffiostub.c',
+'binexpand.c', 'correlscore.c', 'grayquantlow.c', 'pixabasic.c',
+'rop.c', 'utils.c', 'binexpandlow.c', 'dewarp.c', 'heap.c', 'pixacc.c',
+'ropiplow.c', 'viewfiles.c', 'binreduce.c', 'dwacomb.2.c', 'jbclass.c',
+'pixafunc1.c', 'roplow.c', 'warper.c', 'binreducelow.c',
+'dwacomblow.2.c', 'jpegio.c', 'pixafunc2.c', 'rotateam.c',
+'watershed.c', 'blend.c', 'edge.c', 'jpegiostub.c', 'pixalloc.c',
+'rotateamlow.c', 'webpio.c', 'bmf.c', 'endiantest.c', 'kernel.c',
+'pixarith.c', 'rotate.c', 'webpiostub.c', 'bmpio.c', 'enhance.c',
+'leptwin.c', 'pixcomp.c', 'rotateorth.c', 'writefile.c', 'bmpiostub.c',
+'fhmtauto.c', 'list.c', 'pixconv.c', 'rotateorthlow.c',
+'xtractprotos.c', 'boxbasic.c', 'fhmtgen.1.c', 'makefile.static',
+'pixtiling.c', 'rotateshear.c', 'zlibmem.c', 'boxfunc1.c',
+'fhmtgenlow.1.c', 'maze.c', 'pngio.c', 'runlength.c', 'zlibmemstub.c',
+'boxfunc2.c', 'finditalic.c', 'morphapp.c', 'pngiostub.c', 'sarray.c',
+'boxfunc3.c', 'flipdetect.c', 'morph.c', 'pnmio.c', 'scale.c',
+'ccbord.c', 'fliphmtgen.c', 'morphdwa.c', 'pnmiostub.c', 'scalelow.c',
+'ccthin.c', 'fmorphauto.c', 'morphseq.c', 'projective.c', 'seedfill.c',
+'classapp.c', 'fmorphgen.1.c', 'numabasic.c', 'psio1.c',
+'seedfilllow.c']
+
+# Some "perfectly good" functions simply are not exported 
+# as of leptonica 1.6.7
+NOT_EXPORTED = set(["pixGetForegroundGrayMap", "pixRandomHarmonicWarpLUT", "pixGetWindowsHBITMAP"])
+
 if __name__ == "__main__":
-    main(files)
+    # FIXME:
+    # The files of type ".1.c"  are being skipped for now, mostly
+    # due to not respecting the comment format prefixing the functions
+    # (they miss the ! marker in th  /*! comments 
+    main([filename for filename in files if filename.count(".") == 1])

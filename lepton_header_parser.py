@@ -232,10 +232,15 @@ file_template = """
 import ctypes
 
 %(classes)s
+
+%(aliases)s
+
 """
-def render_file(class_list):
+def render_file(class_list, alias_list):
+    aliases = "\n".join("%s = %s" % alias_pair for alias_pair in alias_list)
     with open(target_file, "wt") as outfile:
-        outfile.write(file_template % {"classes": "\n".join(class_list)} )
+        outfile.write(file_template % {"classes": "\n".join(class_list),
+            "aliases": aliases} )
     
     
 
@@ -271,13 +276,19 @@ def main(file_names):
     for file_name in file_names:
         structs.update(parse_file(lepton_source_dir + file_name))
     # we are not reading the typedefs, just  ifering the tytpedsf from
-    # the strcuture name, and there is one exception:
-    structs["DLLLIST"] = structs ["DOUBLELINKEDLIST"] 
+    # the strcuture name, and there are  a few exceptions:
+    irregular_names = (("BBUFFER", "BYTEBUFFER"), 
+        ("DLLIST", "DOUBLELINKEDLIST"), 
+        ("PIXCMAP", "DOUBLELINKEDLIST"),
+        ("PIXAC", "PIXACOMP"), ("PIXC", "PIXCOMP")
+    )
     class_list = order_classes(structs)
-    render_file(class_list)
+    render_file(class_list, irregular_names)
 
 
-all_headers = """bbuffer.h  dewarp.h gplot.h pix.h regutils.h bmf.h  heap.h ptra.h         stack.h bmp.h list.h queue.h sudoku.h array.h ccbord.h jbclass.h  morph.h     watershed.h""".split()
+all_headers = ['bbuffer.h', 'dewarp.h', 'gplot.h', 'pix.h',
+'regutils.h', 'bmf.h', 'heap.h', 'ptra.h', 'stack.h', 'bmp.h',
+'list.h', 'queue.h', 'sudoku.h', 'array.h', 'ccbord.h', 'jbclass.h', 'morph.h', 'watershed.h']
 
 
 if __name__ == "__main__":

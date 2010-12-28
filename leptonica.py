@@ -42,7 +42,7 @@ if __name__ == "__main__":
     import sys
     import pygame
     if len(sys.argv) < 2:
-        sys.stderr.write ("Pass an image filename for testing")
+        sys.stderr.write ("Pass an image filename for testing\n\n")
         sys.exit(1)
     img = lep.readfile.pixRead(sys.argv[1]) #("/home/gwidion/teste3.png")
     sc = pygame.display.set_mode((img.w, img.h))

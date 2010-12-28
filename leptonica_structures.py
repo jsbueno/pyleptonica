@@ -325,17 +325,6 @@ class BMP_INFOHEADER(ctypes.Structure):
 
 
 
-class DLLLIST(ctypes.Structure):
-    """Comments not generated
-    """
-    _fields_ = [
-        ("prev", ctypes.POINTER(DOUBLELINKEDLIST)),
-        ("next", ctypes.POINTER(DOUBLELINKEDLIST)),
-        ("data", ctypes.c_void_p)
-    ]
-
-
-
 class NUMAA(ctypes.Structure):
     """Comments not generated
     """
@@ -656,4 +645,11 @@ class JBCLASSER(ctypes.Structure):
         ("ptall", ctypes.POINTER(PTA))
     ]
 
+
+
+BBUFFER = BYTEBUFFER
+DLLIST = DOUBLELINKEDLIST
+PIXCMAP = DOUBLELINKEDLIST
+PIXAC = PIXACOMP
+PIXC = PIXCOMP
 
