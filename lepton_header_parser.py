@@ -1,13 +1,41 @@
 # -*- coding: utf-8 -*-
+    
+    
+    # "pyleptonica" is a Python wrapper to Leptonica Library
+    # Copyright (C) 2010 João Sebastião de Oliveira Bueno <jsbueno@python.org.br>
+    
+    #This program is free software: you can redistribute it and/or modify
+    #it under the terms of the Lesser GNU General Public License as published by
+    #the Free Software Foundation, either version 3 of the License, or
+    #(at your option) any later version.
 
+    #This program is distributed in the hope that it will be useful,
+    #but WITHOUT ANY WARRANTY; without even the implied warranty of
+    #MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    #GNU General Public License for more details.
+
+    #You should have received a copy of the Lesser GNU General Public License
+    #along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+This file is responsible to parse the Leptonica library
+C structures, as defined in the source code header files
+and generate corresponding c_types python classes
+to interoperate with them.
+
+You may not need to run this to get pyleptonica running - 
+check if your leptonica_structures work for your version
+of leptonica
+"""
+
+
+# FIXME: automate this:
 lepton_source_dir = "/home/gwidion/build/leptonlib-1.67/src/"
-target_file = "lepton_ctypes.py"
-
-
+target_file = "leptonica_structures.py"
 
 # I am feeling quite intimidated by "parsers" at this time. let's do it by hand.
 
-# from the "environ.h" file
+# from the "environ.h" file in leptonica source
 lepton_types = {
     "l_int8": "ctypes.c_byte", 
     "l_uint8": "ctypes.c_ubyte",
@@ -197,6 +225,8 @@ def parse_file(file_name):
 
 file_template = """
 #coding: utf-8
+# Author: João S. O. Bueno
+# This is a generated file - do not edit!
 
 import ctypes
 
