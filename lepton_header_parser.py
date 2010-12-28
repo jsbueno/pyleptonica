@@ -257,7 +257,7 @@ def order_classes(structs):
                 if count > 100:
                     print pre_reqs
                     print rendered
-                    raise Exception("Kabum")
+                    raise Exception("Could not get Struct classes in order")
                 continue
             class_list.append(render_class(struct, structs[struct][0], recursive))
             rendered.add(struct)

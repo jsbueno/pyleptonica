@@ -22,6 +22,8 @@ generates a file that anotates calling parameteers and return types for all
 those functions
 """
 import re
+from lepton_header_parser import lepton_types
+
 lepton_source_dir = "/home/gwidion/build/leptonlib-1.67/src/"
 target_file = "leptonica_functions.py"
 
@@ -121,14 +123,36 @@ def parse_functions(text):
         functions[name] = (arg_list, return_type, comment)
     return functions
         
-    
-
 
 def parse_file(file_name):
     text = get_file_contents(file_name)
     comment = parse_file_comment(text)
     functions = parse_functions(text)
     return comment, functions
+
+def format_return_type(return_type):
+    return_type = return_type.strip()
+    indirections = 0
+    while return_type.endswith("*"):
+        indirections += 1
+        return_type = return_type[:-1].strip()
+    if return_type == "char" and indirections == 1:
+        # Function automatically dealocates string returned by library
+        # and creates a python string
+        return_type = """lambda address: (ctypes.string_at(address), free(address))[0]"""
+    elif return_type == "void" and indirections == 0:
+        return_type = "None"
+    elif return_type in lepton_types:
+        return_type = lepton_types[return_type]
+        for i in xrange(indirections):
+            return_type = "ctypes.POINTER(%s)" % return_type
+    else: #Return type should be a pointer to one of the library defined structures
+        if indirections == 1:
+            return_type = "lambda address: %s.from_address(address)" % return_type
+        elif indirections > 1:
+            for i in xrange(indirections):
+                return_type = "ctypes.POINTER(%s)" % return_type
+    return return_type
 
 # indented to fit inside the generated classes
 function_template = '''
@@ -142,7 +166,28 @@ function_template = '''
         """
         %(referenciation_code)s
         return leptonica.%(name)s(*args)
+    
 '''
+
+
+def render_functions(functions_dict):
+    functions = []
+    for name, (arg_list, return_type, function_doc) in functions_dict.items():
+        return_type = format_return_type(return_type)
+        function_doc = "       \n".join("%s" % str(args) for args in arg_list) + "       \n" + function_doc
+        # TODO: transform argument types into proper python names
+        argtypes = ", ".join(args[0] for args in arg_list)
+        # TODO: generate the referenciation code
+        
+        functions.append (function_template %{
+            "name": name,
+            "argtypes": argtypes,
+            "restype": return_type,
+            "docstring": function_doc,
+            "referenciation_code": "" }
+        )
+    return "    \n".join(functions)
+        
 
 class_template = '''
 class %(file_name)s(object):
@@ -151,29 +196,51 @@ class %(file_name)s(object):
 
 '''
 
+def render_modules(modules):
+    classes = {}
+    for module in modules:
+        module_doc = modules[module][0]
+        functions_dict = modules[module][1]
+        classes["module"] = class_template % {"file_name": module,
+                            "docstring": module_doc, 
+                            "functions": render_functions(functions_dict)
+                            }
+    return classes
+
 file_template = """
 import ctypes
 from leptonica_structures import *
 
 try:
     leptonica = ctypes.cdll.LoadLibrary("liblept.so")
+    libc = ctypes.cdll.LoadLibrary("libc.so.6")
 except OSError:
+    #Windows: untested ! 
+    import ctypes.utils
     leptonica = ctypes.cdll.LoadLibrary("liblept.dll")
+    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_msvcrt())
+
+free = libc.free
 
 %(classes)s
 
 __all__ = %(class_names)s + ["leptonica"]
 """
 
+def render_file(classes):
+    with open(target_file, "wt") as outfile:
+        outfile.write(file_template % {"classes": "\n".join(classes.values()), "class_names": list(classes.keys())})
 
 def main(file_names):
     modules = {}
     for file_name in file_names:
         module_name = file_name.rsplit(".",1)[0]
         modules[module_name] = parse_file(lepton_source_dir + file_name)
-    functions = modules[module_name][1]
-    for function in functions:
-        print function, functions[function][1], functions[function][0]
+    classes = render_modules(modules)
+    render_file(classes)
+    #functions = modules[module_name][1]
+    #for function in functions:
+    #    print function, functions[function][1], functions[function][0]
 
 if __name__ == "__main__":
-    main(["utils.c"])
+    main(["affine.c"])

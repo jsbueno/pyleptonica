@@ -25,7 +25,7 @@ from leptonica_structures import PIX
 # from ctypes import c_* #invalid python, so we do this:
 globals().update((name, getattr(ctypes, name)) for name in dir(ctypes) if name.startswith("c_"))
 
-lep = ctypes.cdll.LoadLibrary( "liblept.so")
+lep = ctypes.cdll.LoadLibrary("liblept.so")
 
 
 
