@@ -136,7 +136,7 @@ def format_return_type(return_type):
     while return_type.endswith("*"):
         indirections += 1
         return_type = return_type[:-1].strip()
-    if return_type.startswith("const"):
+    if return_type.startswith("const") or return_type.startswith("static"):
         return_type = return_type.split(None,1)[-1].strip()
     if return_type == "char" and indirections == 1:
         # Function automatically dealocates string returned by library
@@ -160,7 +160,7 @@ def format_args(arg_list):
     final_args = []
     for arg_type, arg_name in arg_list:
         indirections = arg_name.count("*")
-        if arg_type.startswith("const"):
+        if arg_type.startswith("const") or arg_type.startswith("static") :
             arg_type = arg_type.split(None,1)[-1].strip()
         if arg_type in lepton_types:
             arg_type = lepton_types[arg_type]
@@ -258,7 +258,7 @@ def main(file_names):
     #functions = modules[module_name][1]
     #for function in functions:
     #    print function, functions[function][1], functions[function][0]
-files = """gifio.c affine.c ptra.c shear.c skew.c arrayaccess.c
-""".split()
+files = """gifio.c affine.c ptra.c shear.c skew.c arrayaccess.c readfile.c 
+""".split() #grayquant.c failing
 if __name__ == "__main__":
     main(files)

@@ -20,22 +20,23 @@
 
 import ctypes
 import struct
-from leptonica_structures import PIX
+#from leptonica_structures import PIX
+import leptonica_functions as lep
 
 # from ctypes import c_* #invalid python, so we do this:
 globals().update((name, getattr(ctypes, name)) for name in dir(ctypes) if name.startswith("c_"))
 
-lep = ctypes.cdll.LoadLibrary("liblept.so")
+#lep = ctypes.cdll.LoadLibrary("liblept.so")
 
 
 
-def getPix(pointer):
-    if pointer is None:
-        raise TypeError("Failed to obtain image")
-    return PIX.from_address(pointer)
+#def getPix(pointer):
+    #if pointer is None:
+        #raise TypeError("Failed to obtain image")
+    #return PIX.from_address(pointer)
 
-lep.pixRead.argtypes=[ctypes.c_char_p]
-lep.pixRead.restype = getPix
+#lep.pixRead.argtypes=[ctypes.c_char_p]
+#lep.pixRead.restype = getPix
 
 if __name__ == "__main__":
     import sys
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.stderr.write ("Pass an image filename for testing")
         sys.exit(1)
-    img = lep.pixRead(sys.argv[1]) #("/home/gwidion/teste3.png")
+    img = lep.readfile.pixRead(sys.argv[1]) #("/home/gwidion/teste3.png")
     sc = pygame.display.set_mode((img.w, img.h))
     for y in xrange(img.h):
       for x in xrange(img.w):
