@@ -232,19 +232,13 @@ import ctypes
 
 %(classes)s
 """
-def render_file (class_list):
+def render_file(class_list):
     with open(target_file, "wt") as outfile:
         outfile.write(file_template % {"classes": "\n".join(class_list)} )
     
     
 
-def main(file_names):
-    structs = {}
-    for file_name in file_names:
-        structs.update(parse_file(lepton_source_dir + file_name))
-    # we are not reading the typedefs, just  ifering the tytpedsf from
-    # the strcuture name, and there is one exception:
-    structs["DLLLIST"] = structs ["DOUBLELINKEDLIST"] 
+def order_classes(structs):
     class_list = []
     rendered = set()
     count = 0
@@ -269,6 +263,16 @@ def main(file_names):
             rendered.add(struct)
             del structs[struct]
         count += 1
+    return class_list
+
+def main(file_names):
+    structs = {}
+    for file_name in file_names:
+        structs.update(parse_file(lepton_source_dir + file_name))
+    # we are not reading the typedefs, just  ifering the tytpedsf from
+    # the strcuture name, and there is one exception:
+    structs["DLLLIST"] = structs ["DOUBLELINKEDLIST"] 
+    class_list = order_classes(structs)
     render_file(class_list)
 
 
