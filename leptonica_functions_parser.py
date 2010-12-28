@@ -22,7 +22,7 @@ generates a file that anotates calling parameteers and return types for all
 those functions
 """
 import re
-from lepton_header_parser import lepton_types
+from leptonica_header_parser import lepton_types
 
 lepton_source_dir = "/home/gwidion/build/leptonlib-1.67/src/"
 target_file = "leptonica_functions.py"
