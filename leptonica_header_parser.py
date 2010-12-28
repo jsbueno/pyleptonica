@@ -28,9 +28,12 @@ check if your leptonica_structures work for your version
 of leptonica
 """
 
+import sys
+from config import leptonica_home
 
 # FIXME: automate this:
-lepton_source_dir = "/home/gwidion/build/leptonlib-1.67/src/"
+
+lepton_source_dir = leptonica_home + "/src/"
 target_file = "leptonica_structures.py"
 
 # I am feeling quite intimidated by "parsers" at this time. let's do it by hand.
@@ -261,8 +264,8 @@ def order_classes(structs):
                 recursive = True
             if not rendered.issuperset(pre_reqs) :
                 if count > 100:
-                    print pre_reqs
-                    print rendered
+                    sys.stderr.write(str(pre_reqs) + "\n\n")
+                    sys.stderr.write(str(rendered) + "\n")
                     raise Exception("Could not get Struct classes in order")
                 continue
             class_list.append(render_class(struct, structs[struct][0], recursive))

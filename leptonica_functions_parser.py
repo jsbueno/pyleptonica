@@ -22,9 +22,11 @@ generates a file that anotates calling parameteers and return types for all
 those functions
 """
 import re
+import sys
 from leptonica_header_parser import lepton_types
+from config import leptonica_home
 
-lepton_source_dir = "/home/gwidion/build/leptonlib-1.67/src/"
+lepton_source_dir = leptonica_home + "/src/"
 target_file = "leptonica_functions.py"
 
 class FunctionNotExported(Exception):
@@ -115,14 +117,14 @@ def parse_prototype(prototype_text):
         if token.startswith("/*"):
             token = token.split("*/",1)[1].strip()
         if "(" in token:
-            print "Unhandled parameter declaration - not exporting: ", function_name
+            sys.stderr.write("Unhandled parameter declaration - not exporting: %s\n" % function_name)
             raise FunctionNotExported
         if token.strip() == "void":
             break
         try:
             data_type, name = token.rsplit(None,1)
         except Exception, error:
-            print prototype_text
+            sys.stderr.write("Unexpected preample/function declaration. Parsing error:\n\n%s\n" % protoype_text)
             raise
         parameters.append((data_type.strip(), name.strip()))
     return return_type, function_name, parameters 
@@ -140,11 +142,7 @@ def parse_functions(text):
     doc_and_proto_expr = re.compile(r"^(\/\*\!.*?)^{", re.MULTILINE| re.DOTALL)
     doc_and_proto = doc_and_proto_expr.findall(text)
     for function in doc_and_proto:
-        try:
-            raw_comment, prototype = function.split("*/", 1)
-        except Exception, error:
-            print function
-            raise
+        raw_comment, prototype = function.split("*/", 1)
         comment = strip_comment(raw_comment)
         try:
             return_type, name, arg_list = parse_prototype(prototype)
@@ -227,7 +225,7 @@ def render_functions(functions_dict):
         try:
             return_type = format_return_type(return_type)
         except FunctionNotExported:
-            print "Function %s not exported. verify" %name
+            os.stderr.write("Function %s not exported. verify.\n" % name)
             continue
         function_doc = "       \n".join("%s" % str(args) for args in arg_list) + "       \n" + function_doc
         # TODO: transform argument types into proper python names
