@@ -20,9 +20,7 @@ setup(name = "pyleptonica",
     packages = ["leptonica"],
     package_data = {'leptonica' : files },
     scripts = [],
-    long_description = read("README")
-
-
+    long_description = read("README"),
     classifiers=[
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
