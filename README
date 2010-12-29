@@ -33,6 +33,9 @@ the leptonica_header_parser and leptonica_function_parser as stand
 alone programs, afeter tunning a config.py from the config_Template.py
 file
 
+There are at this time, two utility functions to convert 
+Leptonica images to and from Python Imaging Library (PIL) Images.
+
 Also, although I have not tested this under windows or Mac OS-- it
 probably need some tweaks to run (mostly finding the correct libraries 
 with ctypes)

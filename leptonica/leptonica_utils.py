@@ -88,7 +88,7 @@ def pilImgToLep(pil_img):
         #g = img_data[i + 1]
         #b = img_data[i + 2]
         #a = img_data[i + 3]
-        lep_img.data[i // 4] = struct.unpack("<I", img_data[i:i+4])[0]
+        lep_img.data[i // 4] = struct.unpack(">I", img_data[i:i+4])[0]
     return lep_img
 
     

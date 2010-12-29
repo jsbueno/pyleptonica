@@ -1,0 +1,15 @@
+./LICENSE
+./README
+./config.py
+./config_template.py
+./gpl-3.0.txt
+./leptonica
+./leptonica/__init__.py
+./leptonica/leptonica.py
+./leptonica/leptonica_functions.py
+./leptonica/leptonica_functions_parser.py
+./leptonica/leptonica_header_parser.py
+./leptonica/leptonica_structures.py
+./leptonica/leptonica_utils.py
+./leptonica_functions.py~
+./setup.py
