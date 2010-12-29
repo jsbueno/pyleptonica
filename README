@@ -1,10 +1,14 @@
+pyleptonica
+===========
+
 At this stage this is a very thin ctypes wrapper over the Leptonica
 library. 
 Almost all functions are exposed to Python, correctly anotated, and data
-structures used in Leptonica are available as classes from Python. One an create and fill new structures, or read the values returned by any Leptonica
-function.
+structures used in Leptonica are available as classes from Python. One an create and fill new structures, or read the values returned by any Leptonica function.
 
-I also transposed Leptonica's extensive inline documentation to Python's docstrings, so it is possible to check for help and parameter types
+This Library is licensed under the Lesser GNU Public License Version 3 or Later.
+
+It transposes Leptonica's extensive inline documentation to Python's docstrings, so it is possible to check for help and parameter types
 from the Python interpreter, using pydoc or from an IDE. 
 
 However, whenever a function takes pointers or arrays of pointers as 
@@ -19,10 +23,9 @@ not a pointer to a structure.
 (Don't ask me how to free the memory for such structure afterwards --
 I am into it, but I don't know for shure yet :-p )
 
-This is on a very early stage. I will write a primitive
-setuyp.py now and upload the code.
+This is on a very early stage. 
 
-To run it, you might not need to have Leptonia source files:
+To run it, you might not need to have Leptonica source files:
 I versioned the generated files as well so that most people jsut have
 to copy the .py files around. If you want to hack the code, or generate 
 wrappers for other versions of Leptonica, you have to execute
@@ -30,6 +33,9 @@ the leptonica_header_parser and leptonica_function_parser as stand
 alone programs, afeter tunning a config.py from the config_Template.py
 file
 
+Also, although I have not tested this under windows or Mac OS-- it
+probably need some tweaks to run (mostly finding the correct libraries 
+with ctypes)
 
 Have fun!
 
