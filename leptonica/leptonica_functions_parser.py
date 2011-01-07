@@ -26,6 +26,7 @@ import sys
 from leptonica_header_parser import lepton_types
 from config import leptonica_home
 
+
 lepton_source_dir = leptonica_home + "/src/"
 target_file = "leptonica_functions.py"
 
@@ -144,7 +145,7 @@ def parse_functions(text):
     for their documentation, return types and parameter lists
     """
     functions = {}
-    # chop everything between a /*! staring line and  a { starting line 
+    # chop everything between a /*! starting line and  a { starting line 
     doc_and_proto_expr = re.compile(r"^(\/\*\!.*?)^{",
         re.MULTILINE | re.DOTALL)
     doc_and_proto = doc_and_proto_expr.findall(text)
@@ -298,7 +299,16 @@ free = libc.free
 
 %(classes)s
 
-__all__ = %(class_names)s + ["leptonica"]
+# In C, you don't have to know in which "module" a function lives
+# you should not need in Python: 
+functions = type("all_functions", (object,), dict (
+        (function_name, function)
+        for cls in globals().values() if isinstance(cls, type)
+        for function_name, function in cls.__dict__.items()
+            if isinstance(function, staticmethod)
+    ))
+
+__all__ = %(class_names)s + ["leptonica", "functions"]
 """
 
 def render_file(classes):

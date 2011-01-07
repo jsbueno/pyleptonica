@@ -3,6 +3,9 @@
 
 import ctypes
 from leptonica_structures import *
+from types import FunctionType
+import sys
+PR = sys.stdout.write
 
 try:
     leptonica = ctypes.cdll.LoadLibrary("liblept.so")
@@ -73574,4 +73577,12 @@ class sel2(object):
 
 
 
-__all__ = ['pixconv', 'paintcmap', 'graphics', 'rotateorthlow', 'morphapp', 'numabasic', 'graymorphlow', 'numafunc1', 'numafunc2', 'gplot', 'colorseg', 'webpio', 'affine', 'fliphmtgen', 'viewfiles', 'pixafunc2', 'pixafunc1', 'correlscore', 'shear', 'freetype', 'boxfunc3', 'convolvelow', 'boxfunc1', 'textops', 'binexpandlow', 'colorquant1', 'rank', 'fmorphauto', 'rotate', 'regutils', 'morph', 'list', 'flipdetect', 'fhmtauto', 'binreducelow', 'morphseq', 'enhance', 'adaptmap', 'kernel', 'pixarith', 'bardecode', 'rotateshear', 'rop', 'watershed', 'colormorph', 'bilinear', 'scale', 'convolve', 'scalelow', 'grayquant', 'colormap', 'tiffiostub', 'jpegio', 'binreduce', 'pixacc', 'pngiostub', 'affinecompose', 'queue', 'rotateorth', 'warper', 'bbuffer', 'ccbord', 'readfile', 'webpiostub', 'gifiostub', 'classapp', 'pixcomp', 'seedfill', 'parseprotos', 'psio2stub', 'skew', 'makefile', 'rotateamlow', 'maze', 'arithlow', 'pixabasic', 'bmf', 'sudoku', 'pix5', 'pix4', 'pix1', 'pix3', 'pix2', 'pngio', 'heap', 'gifio', 'projective', 'arrayaccess', 'morphdwa', 'leptwin', 'zlibmem', 'pixalloc', 'pageseg', 'fpix2', 'psio1stub', 'fpix1', 'ptafunc1', 'runlength', 'bmpiostub', 'compare', 'conncomp', 'utils', 'pnmio', 'selgen', 'pnmiostub', 'zlibmemstub', 'convertfiles', 'spixio', 'dewarp', 'baseline', 'ptabasic', 'edge', 'ropiplow', 'boxfunc2', 'boxbasic', 'ptra', 'sarray', 'graymorph', 'tiffio', 'seedfilllow', 'colorcontent', 'xtractprotos', 'rotateam', 'writefile', 'readbarcode', 'binexpand', 'roplow', 'colorquant2', 'stack', 'finditalic', 'grayquantlow', 'jbclass', 'bmpio', 'ccthin', 'partition', 'jpegiostub', 'binarize', 'pixtiling', 'endiantest', 'psio1', 'psio2', 'blend', 'sel1', 'sel2'] + ["leptonica"]
+
+all_functions = type("all_functions", (object,), dict (
+        (function_name, function)
+        for cls in globals().values() if isinstance(cls, type)
+        for function_name, function in cls.__dict__.items()
+            if isinstance(function, staticmethod)
+    ))
+
+__all__ = ['pixconv', 'paintcmap', 'graphics', 'rotateorthlow', 'morphapp', 'numabasic', 'graymorphlow', 'numafunc1', 'numafunc2', 'gplot', 'colorseg', 'webpio', 'affine', 'fliphmtgen', 'viewfiles', 'pixafunc2', 'pixafunc1', 'correlscore', 'shear', 'freetype', 'boxfunc3', 'convolvelow', 'boxfunc1', 'textops', 'binexpandlow', 'colorquant1', 'rank', 'fmorphauto', 'rotate', 'regutils', 'morph', 'list', 'flipdetect', 'fhmtauto', 'binreducelow', 'morphseq', 'enhance', 'adaptmap', 'kernel', 'pixarith', 'bardecode', 'rotateshear', 'rop', 'watershed', 'colormorph', 'bilinear', 'scale', 'convolve', 'scalelow', 'grayquant', 'colormap', 'tiffiostub', 'jpegio', 'binreduce', 'pixacc', 'pngiostub', 'affinecompose', 'queue', 'rotateorth', 'warper', 'bbuffer', 'ccbord', 'readfile', 'webpiostub', 'gifiostub', 'classapp', 'pixcomp', 'seedfill', 'parseprotos', 'psio2stub', 'skew', 'makefile', 'rotateamlow', 'maze', 'arithlow', 'pixabasic', 'bmf', 'sudoku', 'pix5', 'pix4', 'pix1', 'pix3', 'pix2', 'pngio', 'heap', 'gifio', 'projective', 'arrayaccess', 'morphdwa', 'leptwin', 'zlibmem', 'pixalloc', 'pageseg', 'fpix2', 'psio1stub', 'fpix1', 'ptafunc1', 'runlength', 'bmpiostub', 'compare', 'conncomp', 'utils', 'pnmio', 'selgen', 'pnmiostub', 'zlibmemstub', 'convertfiles', 'spixio', 'dewarp', 'baseline', 'ptabasic', 'edge', 'ropiplow', 'boxfunc2', 'boxbasic', 'ptra', 'sarray', 'graymorph', 'tiffio', 'seedfilllow', 'colorcontent', 'xtractprotos', 'rotateam', 'writefile', 'readbarcode', 'binexpand', 'roplow', 'colorquant2', 'stack', 'finditalic', 'grayquantlow', 'jbclass', 'bmpio', 'ccthin', 'partition', 'jpegiostub', 'binarize', 'pixtiling', 'endiantest', 'psio1', 'psio2', 'blend', 'sel1', 'sel2'] + ["leptonica", "all_functions"]
