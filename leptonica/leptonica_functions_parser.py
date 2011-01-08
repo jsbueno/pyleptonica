@@ -184,16 +184,18 @@ def format_return_type(return_type):
         return_type = "None"
     elif return_type in lepton_types:
         return_type = lepton_types[return_type]
+        # MAYBE change these for c_void_p ? 
         for i in xrange(indirections):
             return_type = "ctypes.POINTER(%s)" % return_type
     else: #Return type should be a pointer to one 
           #of the library defined structures
         if indirections == 1:
-            return_type = ("lambda address: %s.from_address(address)" %
-                return_type)
+            return_type = ("lambda address: %s(address)" % return_type)
+        # More than one indirection not promoted to the magic hybrid type:
         elif indirections > 1:
-            for i in xrange(indirections):
-                return_type = "ctypes.POINTER(%s)" % return_type
+            return_type = "ctypes.c_void_p"
+            #for i in xrange(indirections):
+                #return_type = "ctypes.POINTER(%s%s)" % ("structs._" if i == 0 else "", return_type)
     return return_type
 
 def format_args(arg_list):
@@ -205,8 +207,10 @@ def format_args(arg_list):
             arg_type = arg_type.split(None,1)[-1].strip()
         if arg_type in lepton_types:
             arg_type = lepton_types[arg_type]
-        for i in xrange(indirections):
-            arg_type = "ctypes.POINTER(%s)" % arg_type
+        if indirections:
+            arg_type = "ctypes.c_void_p"
+        #for i in xrange(indirections):
+            #arg_type = "ctypes.POINTER(%s)" % arg_type
         final_args.append(arg_type)
     #TODO: the referenciation code for each argument
     # must be generated here as well
@@ -215,6 +219,8 @@ def format_args(arg_list):
     return final_args
     
 # indented to fit inside the generated classes
+
+
 function_template = '''
     try:
         leptonica.%(name)s.argtypes = [%(argtypes)s]
@@ -228,11 +234,16 @@ function_template = '''
         """
         %(docstring)s
         """
+        args = _convert_params(*args)
         %(referenciation_code)s
         return leptonica.%(name)s(*args)
     
 '''
 
+#referenciation_template = '''
+       #args = _convert_params(*args)
+
+#'''
 
 def render_functions(functions_dict):
     functions = []
@@ -285,6 +296,7 @@ file_template = """
 
 import ctypes
 from leptonica_structures import *
+import leptonica_structures as structs
 
 try:
     leptonica = ctypes.cdll.LoadLibrary("liblept.so")
@@ -297,10 +309,19 @@ except OSError:
 
 free = libc.free
 
+def _convert_params(*args):
+    new_args = []
+    for arg in args:
+        if isinstance(arg, structs.LeptonObject):
+            arg = arg._address_
+        new_args.append(arg)
+    return tuple(new_args)
+
+
 %(classes)s
 
 # In C, you don't have to know in which "module" a function lives
-# you should not need in Python: 
+# you should not need in Python - All Leptonica functions are agregated here:
 functions = type("all_functions", (object,), dict (
         (function_name, function)
         for cls in globals().values() if isinstance(cls, type)

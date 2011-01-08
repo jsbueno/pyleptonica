@@ -1,12 +1,75 @@
 
-#coding: utf-8
+# coding: utf-8
 # Author: João S. O. Bueno
 # This is a generated file - do not edit!
 
 import ctypes
+import weakref
+
+class LeptonObject(object):
+    def __new__(cls, *args):
+        data = None
+        if len(args) != 1:
+            from leptonica_functions import functions
+            if hasattr(functions, cls.__name__.lower() + "Create"):
+                constructor = getattr(functions, cls.__name__.lower() +
+                    "Create")
+                return constructor(*args)
+            data = cls._type_(*args)
+            address = ctypes.addressof(data)
+        else:
+            address = args[0]
+            if isinstance (address, ctypes.c_void_p):
+                address = address.value
+        if address in cls._instances_:
+            return cls._instances_[address]()
+        self = object.__new__(cls)
+        self._address_ = ctypes.c_void_p(address)
+        cls._instances_[address] = weakref.ref(self)
+        if data:
+            self._data_ = data
+        return self
+
+    def __repr__(self):
+        repr_ = "Leptonica %s object\n" % self.__class__.__name__
+        if self._address_:
+            for field in self._type_._fields_:
+                repr_ += "    %s: %s,\n" % (field[0], getattr(self, field[0]))
+        else:
+            repr_ += "Not initiated or destroyed\n"
+        return repr_
+    def __hash__(self):
+        return self._address_.value
+    
+    def __del__(self):
+        cls = self.__class__
+        del cls._instances_[self._address_.value]
+        from leptonica_functions import functions
+        if hasattr(functions, cls.__name__.lower() + "Destroy"):
+            destrutor = getattr(functions, cls.__name__.lower() + "Destroy")
+            destrutor(ctypes.c_void_p(ctypes.addressof(self._address_)))
+
+def property_factory(raw_structure, field_name):
+    return  property(lambda s: getattr(
+                        raw_structure.from_address(s._address_.value),
+                        field_name),
+                     lambda s, val: setattr(
+                        raw_structure.from_address(s._address_.value),
+                        field_name, val)
+                    )
+
+class MetaPointer(type): 
+    def __new__(cls, name, bases, dic):
+        base_struct = dic["_type_"]
+        for field, type_ in base_struct._fields_:
+            pr = property_factory(base_struct, field)
+            dic[field] = pr
+        dic["_instances_"] = {}
+        return type(name, bases, dic)
 
 
-class BOX(ctypes.Structure):
+
+class _BOX(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -17,9 +80,12 @@ class BOX(ctypes.Structure):
         ("refcount", ctypes.c_uint32)
     ]
 
+class BOX(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _BOX
 
 
-class SARRAY(ctypes.Structure):
+class _SARRAY(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -29,9 +95,12 @@ class SARRAY(ctypes.Structure):
         ("array", ctypes.POINTER(ctypes.POINTER(ctypes.c_char)))
     ]
 
+class SARRAY(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _SARRAY
 
 
-class PIXCOLORMAP(ctypes.Structure):
+class _PIXCOLORMAP(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -41,9 +110,12 @@ class PIXCOLORMAP(ctypes.Structure):
         ("n", ctypes.c_int32)
     ]
 
+class PIXCOLORMAP(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIXCOLORMAP
 
 
-class BYTEBUFFER(ctypes.Structure):
+class _BYTEBUFFER(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -53,9 +125,12 @@ class BYTEBUFFER(ctypes.Structure):
         ("array", ctypes.POINTER(ctypes.c_ubyte))
     ]
 
+class BYTEBUFFER(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _BYTEBUFFER
 
 
-class FPIX(ctypes.Structure):
+class _FPIX(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -68,9 +143,12 @@ class FPIX(ctypes.Structure):
         ("data", ctypes.POINTER(ctypes.c_float))
     ]
 
+class FPIX(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _FPIX
 
 
-class RGBA_QUAD(ctypes.Structure):
+class _RGBA_QUAD(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -80,9 +158,12 @@ class RGBA_QUAD(ctypes.Structure):
         ("reserved", ctypes.c_ubyte)
     ]
 
+class RGBA_QUAD(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _RGBA_QUAD
 
 
-class PTA(ctypes.Structure):
+class _PTA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -93,9 +174,12 @@ class PTA(ctypes.Structure):
         ("y", ctypes.POINTER(ctypes.c_float))
     ]
 
+class PTA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PTA
 
 
-class L_HEAP(ctypes.Structure):
+class _L_HEAP(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -105,9 +189,12 @@ class L_HEAP(ctypes.Structure):
         ("direction", ctypes.c_int32)
     ]
 
+class L_HEAP(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_HEAP
 
 
-class PIX(ctypes.Structure):
+class _PIX(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -120,13 +207,16 @@ class PIX(ctypes.Structure):
         ("yres", ctypes.c_uint32),
         ("informat", ctypes.c_int32),
         ("text", ctypes.POINTER(ctypes.c_char)),
-        ("colormap", ctypes.POINTER(PIXCOLORMAP)),
+        ("colormap", ctypes.POINTER(_PIXCOLORMAP)),
         ("data", ctypes.POINTER(ctypes.c_uint32))
     ]
 
+class PIX(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIX
 
 
-class SEL(ctypes.Structure):
+class _SEL(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -138,9 +228,12 @@ class SEL(ctypes.Structure):
         ("name", ctypes.POINTER(ctypes.c_char))
     ]
 
+class SEL(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _SEL
 
 
-class L_REGPARAMS(ctypes.Structure):
+class _L_REGPARAMS(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -150,21 +243,27 @@ class L_REGPARAMS(ctypes.Structure):
         ("display", ctypes.c_int32)
     ]
 
+class L_REGPARAMS(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_REGPARAMS
 
 
-class BOXA(ctypes.Structure):
+class _BOXA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
         ("refcount", ctypes.c_uint32),
-        ("box", ctypes.POINTER(ctypes.POINTER(BOX)))
+        ("box", ctypes.POINTER(ctypes.POINTER(_BOX)))
     ]
 
+class BOXA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _BOXA
 
 
-class DPIX(ctypes.Structure):
+class _DPIX(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -177,21 +276,27 @@ class DPIX(ctypes.Structure):
         ("data", ctypes.POINTER(ctypes.c_double))
     ]
 
+class DPIX(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _DPIX
 
 
-class DOUBLELINKEDLIST(ctypes.Structure):
+class _DOUBLELINKEDLIST(ctypes.Structure):
     """Comments not generated
     """
     pass
 
-DOUBLELINKEDLIST._fields_ = [
-        ("prev", ctypes.POINTER(DOUBLELINKEDLIST)),
-        ("next", ctypes.POINTER(DOUBLELINKEDLIST)),
+_DOUBLELINKEDLIST._fields_ = [
+        ("prev", ctypes.POINTER(_DOUBLELINKEDLIST)),
+        ("next", ctypes.POINTER(_DOUBLELINKEDLIST)),
         ("data", ctypes.c_void_p)
     ]
 
+class DOUBLELINKEDLIST(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _DOUBLELINKEDLIST
 
-class L_SUDOKU(ctypes.Structure):
+class _L_SUDOKU(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -205,9 +310,12 @@ class L_SUDOKU(ctypes.Structure):
         ("failure", ctypes.c_int32)
     ]
 
+class L_SUDOKU(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_SUDOKU
 
 
-class NUMA(ctypes.Structure):
+class _NUMA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -219,33 +327,42 @@ class NUMA(ctypes.Structure):
         ("array", ctypes.POINTER(ctypes.c_float))
     ]
 
+class NUMA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _NUMA
 
 
-class BOXAA(ctypes.Structure):
+class _BOXAA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
-        ("boxa", ctypes.POINTER(ctypes.POINTER(BOXA)))
+        ("boxa", ctypes.POINTER(ctypes.POINTER(_BOXA)))
     ]
 
+class BOXAA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _BOXAA
 
 
-class L_STACK(ctypes.Structure):
+class _L_STACK(ctypes.Structure):
     """Comments not generated
     """
     pass
 
-L_STACK._fields_ = [
+_L_STACK._fields_ = [
         ("nalloc", ctypes.c_int32),
         ("n", ctypes.c_int32),
         ("array", ctypes.POINTER(ctypes.c_void_p)),
-        ("auxstack", ctypes.POINTER(L_STACK))
+        ("auxstack", ctypes.POINTER(_L_STACK))
     ]
 
+class L_STACK(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_STACK
 
-class L_PTRA(ctypes.Structure):
+class _L_PTRA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -255,9 +372,12 @@ class L_PTRA(ctypes.Structure):
         ("array", ctypes.POINTER(ctypes.c_void_p))
     ]
 
+class L_PTRA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_PTRA
 
 
-class L_KERNEL(ctypes.Structure):
+class _L_KERNEL(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -268,9 +388,12 @@ class L_KERNEL(ctypes.Structure):
         ("data", ctypes.POINTER(ctypes.POINTER(ctypes.c_float)))
     ]
 
+class L_KERNEL(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_KERNEL
 
 
-class BMP_FILEHEADER(ctypes.Structure):
+class _BMP_FILEHEADER(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -283,30 +406,39 @@ class BMP_FILEHEADER(ctypes.Structure):
         ("bfFill2", ctypes.c_int16)
     ]
 
+class BMP_FILEHEADER(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _BMP_FILEHEADER
 
 
-class L_PTRAA(ctypes.Structure):
+class _L_PTRAA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("nalloc", ctypes.c_int32),
-        ("ptra", ctypes.POINTER(ctypes.POINTER(L_PTRA)))
+        ("ptra", ctypes.POINTER(ctypes.POINTER(_L_PTRA)))
     ]
 
+class L_PTRAA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_PTRAA
 
 
-class SELA(ctypes.Structure):
+class _SELA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
-        ("sel", ctypes.POINTER(ctypes.POINTER(SEL)))
+        ("sel", ctypes.POINTER(ctypes.POINTER(_SEL)))
     ]
 
+class SELA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _SELA
 
 
-class BMP_INFOHEADER(ctypes.Structure):
+class _BMP_INFOHEADER(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -323,31 +455,37 @@ class BMP_INFOHEADER(ctypes.Structure):
         ("biClrImportant", ctypes.c_int32)
     ]
 
+class BMP_INFOHEADER(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _BMP_INFOHEADER
 
 
-class NUMAA(ctypes.Structure):
+class _NUMAA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("nalloc", ctypes.c_int32),
         ("n", ctypes.c_int32),
-        ("numa", ctypes.POINTER(ctypes.POINTER(NUMA)))
+        ("numa", ctypes.POINTER(ctypes.POINTER(_NUMA)))
     ]
 
+class NUMAA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _NUMAA
 
 
-class L_DEWARP(ctypes.Structure):
+class _L_DEWARP(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("pixs", ctypes.POINTER(PIX)),
-        ("pixd", ctypes.POINTER(PIX)),
-        ("sampvdispar", ctypes.POINTER(FPIX)),
-        ("samphdispar", ctypes.POINTER(FPIX)),
-        ("fullvdispar", ctypes.POINTER(FPIX)),
-        ("fullhdispar", ctypes.POINTER(FPIX)),
-        ("naflats", ctypes.POINTER(NUMA)),
-        ("nacurves", ctypes.POINTER(NUMA)),
+        ("pixs", ctypes.POINTER(_PIX)),
+        ("pixd", ctypes.POINTER(_PIX)),
+        ("sampvdispar", ctypes.POINTER(_FPIX)),
+        ("samphdispar", ctypes.POINTER(_FPIX)),
+        ("fullvdispar", ctypes.POINTER(_FPIX)),
+        ("fullhdispar", ctypes.POINTER(_FPIX)),
+        ("naflats", ctypes.POINTER(_NUMA)),
+        ("nacurves", ctypes.POINTER(_NUMA)),
         ("pageno", ctypes.c_int32),
         ("sampling", ctypes.c_int32),
         ("minlines", ctypes.c_int32),
@@ -358,9 +496,12 @@ class L_DEWARP(ctypes.Structure):
         ("success", ctypes.c_int32)
     ]
 
+class L_DEWARP(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_DEWARP
 
 
-class PIXCOMP(ctypes.Structure):
+class _PIXCOMP(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -376,30 +517,36 @@ class PIXCOMP(ctypes.Structure):
         ("size", ctypes.c_int32)
     ]
 
+class PIXCOMP(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIXCOMP
 
 
-class PTAA(ctypes.Structure):
+class _PTAA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
-        ("pta", ctypes.POINTER(ctypes.POINTER(PTA)))
+        ("pta", ctypes.POINTER(ctypes.POINTER(_PTA)))
     ]
 
+class PTAA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PTAA
 
 
-class GPLOT(ctypes.Structure):
+class _GPLOT(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("rootname", ctypes.POINTER(ctypes.c_char)),
         ("cmdname", ctypes.POINTER(ctypes.c_char)),
-        ("cmddata", ctypes.POINTER(SARRAY)),
-        ("datanames", ctypes.POINTER(SARRAY)),
-        ("plotdata", ctypes.POINTER(SARRAY)),
-        ("plottitles", ctypes.POINTER(SARRAY)),
-        ("plotstyles", ctypes.POINTER(NUMA)),
+        ("cmddata", ctypes.POINTER(_SARRAY)),
+        ("datanames", ctypes.POINTER(_SARRAY)),
+        ("plotdata", ctypes.POINTER(_SARRAY)),
+        ("plottitles", ctypes.POINTER(_SARRAY)),
+        ("plotstyles", ctypes.POINTER(_NUMA)),
         ("nplots", ctypes.c_int32),
         ("outname", ctypes.POINTER(ctypes.c_char)),
         ("outformat", ctypes.c_int32),
@@ -409,36 +556,45 @@ class GPLOT(ctypes.Structure):
         ("ylabel", ctypes.POINTER(ctypes.c_char))
     ]
 
+class GPLOT(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _GPLOT
 
 
-class NUMA2D(ctypes.Structure):
+class _NUMA2D(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("nrows", ctypes.c_int32),
         ("ncols", ctypes.c_int32),
         ("initsize", ctypes.c_int32),
-        ("numa", ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(NUMA))))
+        ("numa", ctypes.POINTER(ctypes.POINTER(ctypes.POINTER(_NUMA))))
     ]
 
+class NUMA2D(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _NUMA2D
 
 
-class NUMAHASH(ctypes.Structure):
+class _NUMAHASH(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("nbuckets", ctypes.c_int32),
         ("initsize", ctypes.c_int32),
-        ("numa", ctypes.POINTER(ctypes.POINTER(NUMA)))
+        ("numa", ctypes.POINTER(ctypes.POINTER(_NUMA)))
     ]
 
+class NUMAHASH(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _NUMAHASH
 
 
-class PIXTILING(ctypes.Structure):
+class _PIXTILING(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("pix", ctypes.POINTER(PIX)),
+        ("pix", ctypes.POINTER(_PIX)),
         ("nx", ctypes.c_int32),
         ("ny", ctypes.c_int32),
         ("w", ctypes.c_int32),
@@ -448,81 +604,99 @@ class PIXTILING(ctypes.Structure):
         ("strip", ctypes.c_int32)
     ]
 
+class PIXTILING(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIXTILING
 
 
-class PIXA(ctypes.Structure):
+class _PIXA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
         ("refcount", ctypes.c_uint32),
-        ("pix", ctypes.POINTER(ctypes.POINTER(PIX))),
-        ("boxa", ctypes.POINTER(BOXA))
+        ("pix", ctypes.POINTER(ctypes.POINTER(_PIX))),
+        ("boxa", ctypes.POINTER(_BOXA))
     ]
 
+class PIXA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIXA
 
 
-class PIXACC(ctypes.Structure):
+class _PIXACC(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("w", ctypes.c_int32),
         ("h", ctypes.c_int32),
         ("offset", ctypes.c_int32),
-        ("pix", ctypes.POINTER(PIX))
+        ("pix", ctypes.POINTER(_PIX))
     ]
 
+class PIXACC(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIXACC
 
 
-class CCBORD(ctypes.Structure):
+class _CCBORD(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("pix", ctypes.POINTER(PIX)),
-        ("boxa", ctypes.POINTER(BOXA)),
-        ("start", ctypes.POINTER(PTA)),
+        ("pix", ctypes.POINTER(_PIX)),
+        ("boxa", ctypes.POINTER(_BOXA)),
+        ("start", ctypes.POINTER(_PTA)),
         ("refcount", ctypes.c_int32),
-        ("local", ctypes.POINTER(PTAA)),
-        ("global", ctypes.POINTER(PTAA)),
-        ("step", ctypes.POINTER(NUMAA)),
-        ("splocal", ctypes.POINTER(PTA)),
-        ("spglobal", ctypes.POINTER(PTA))
+        ("local", ctypes.POINTER(_PTAA)),
+        ("global", ctypes.POINTER(_PTAA)),
+        ("step", ctypes.POINTER(_NUMAA)),
+        ("splocal", ctypes.POINTER(_PTA)),
+        ("spglobal", ctypes.POINTER(_PTA))
     ]
 
+class CCBORD(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _CCBORD
 
 
-class PIXACOMP(ctypes.Structure):
+class _PIXACOMP(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
-        ("pixc", ctypes.POINTER(ctypes.POINTER(PIXCOMP))),
-        ("boxa", ctypes.POINTER(BOXA))
+        ("pixc", ctypes.POINTER(ctypes.POINTER(_PIXCOMP))),
+        ("boxa", ctypes.POINTER(_BOXA))
     ]
 
+class PIXACOMP(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIXACOMP
 
 
-class JBDATA(ctypes.Structure):
+class _JBDATA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("pix", ctypes.POINTER(PIX)),
+        ("pix", ctypes.POINTER(_PIX)),
         ("npages", ctypes.c_int32),
         ("w", ctypes.c_int32),
         ("h", ctypes.c_int32),
         ("nclass", ctypes.c_int32),
         ("latticew", ctypes.c_int32),
         ("latticeh", ctypes.c_int32),
-        ("naclass", ctypes.POINTER(NUMA)),
-        ("napage", ctypes.POINTER(NUMA)),
-        ("ptaul", ctypes.POINTER(PTA))
+        ("naclass", ctypes.POINTER(_NUMA)),
+        ("napage", ctypes.POINTER(_NUMA)),
+        ("ptaul", ctypes.POINTER(_PTA))
     ]
 
+class JBDATA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _JBDATA
 
 
-class L_QUEUE(ctypes.Structure):
+class _L_QUEUE(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
@@ -530,30 +704,36 @@ class L_QUEUE(ctypes.Structure):
         ("nhead", ctypes.c_int32),
         ("nelem", ctypes.c_int32),
         ("array", ctypes.POINTER(ctypes.c_void_p)),
-        ("stack", ctypes.POINTER(L_STACK))
+        ("stack", ctypes.POINTER(_L_STACK))
     ]
 
+class L_QUEUE(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_QUEUE
 
 
-class CCBORDA(ctypes.Structure):
+class _CCBORDA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("pix", ctypes.POINTER(PIX)),
+        ("pix", ctypes.POINTER(_PIX)),
         ("w", ctypes.c_int32),
         ("h", ctypes.c_int32),
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
-        ("ccb", ctypes.POINTER(ctypes.POINTER(CCBORD)))
+        ("ccb", ctypes.POINTER(ctypes.POINTER(_CCBORD)))
     ]
 
+class CCBORDA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _CCBORDA
 
 
-class L_BMF(ctypes.Structure):
+class _L_BMF(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("pixa", ctypes.POINTER(PIXA)),
+        ("pixa", ctypes.POINTER(_PIXA)),
         ("size", ctypes.c_int32),
         ("directory", ctypes.POINTER(ctypes.c_char)),
         ("baseline1", ctypes.c_int32),
@@ -568,82 +748,95 @@ class L_BMF(ctypes.Structure):
         ("widthtab", ctypes.POINTER(ctypes.c_int32))
     ]
 
+class L_BMF(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_BMF
 
 
-class PIXAA(ctypes.Structure):
+class _PIXAA(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
         ("n", ctypes.c_int32),
         ("nalloc", ctypes.c_int32),
-        ("pixa", ctypes.POINTER(ctypes.POINTER(PIXA))),
-        ("boxa", ctypes.POINTER(BOXA))
+        ("pixa", ctypes.POINTER(ctypes.POINTER(_PIXA))),
+        ("boxa", ctypes.POINTER(_BOXA))
     ]
 
+class PIXAA(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _PIXAA
 
 
-class L_WSHED(ctypes.Structure):
+class _L_WSHED(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("pixs", ctypes.POINTER(PIX)),
-        ("pixm", ctypes.POINTER(PIX)),
+        ("pixs", ctypes.POINTER(_PIX)),
+        ("pixm", ctypes.POINTER(_PIX)),
         ("mindepth", ctypes.c_int32),
-        ("pixlab", ctypes.POINTER(PIX)),
-        ("pixt", ctypes.POINTER(PIX)),
+        ("pixlab", ctypes.POINTER(_PIX)),
+        ("pixt", ctypes.POINTER(_PIX)),
         ("lines8", ctypes.POINTER(ctypes.c_void_p)),
         ("linem1", ctypes.POINTER(ctypes.c_void_p)),
         ("linelab32", ctypes.POINTER(ctypes.c_void_p)),
         ("linet1", ctypes.POINTER(ctypes.c_void_p)),
-        ("pixad", ctypes.POINTER(PIXA)),
-        ("ptas", ctypes.POINTER(PTA)),
-        ("nasi", ctypes.POINTER(NUMA)),
-        ("nash", ctypes.POINTER(NUMA)),
-        ("namh", ctypes.POINTER(NUMA)),
-        ("nalevels", ctypes.POINTER(NUMA)),
+        ("pixad", ctypes.POINTER(_PIXA)),
+        ("ptas", ctypes.POINTER(_PTA)),
+        ("nasi", ctypes.POINTER(_NUMA)),
+        ("nash", ctypes.POINTER(_NUMA)),
+        ("namh", ctypes.POINTER(_NUMA)),
+        ("nalevels", ctypes.POINTER(_NUMA)),
         ("nseeds", ctypes.c_int32),
         ("nother", ctypes.c_int32),
         ("lut", ctypes.POINTER(ctypes.c_int32)),
-        ("links", ctypes.POINTER(ctypes.POINTER(NUMA))),
+        ("links", ctypes.POINTER(ctypes.POINTER(_NUMA))),
         ("arraysize", ctypes.c_int32),
         ("debug", ctypes.c_int32)
     ]
 
+class L_WSHED(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _L_WSHED
 
 
-class JBCLASSER(ctypes.Structure):
+class _JBCLASSER(ctypes.Structure):
     """Comments not generated
     """
     _fields_ = [
-        ("safiles", ctypes.POINTER(SARRAY)),
+        ("safiles", ctypes.POINTER(_SARRAY)),
         ("method", ctypes.c_int32),
         ("components", ctypes.c_int32),
         ("maxwidth", ctypes.c_int32),
         ("maxheight", ctypes.c_int32),
         ("npages", ctypes.c_int32),
         ("baseindex", ctypes.c_int32),
-        ("nacomps", ctypes.POINTER(NUMA)),
+        ("nacomps", ctypes.POINTER(_NUMA)),
         ("sizehaus", ctypes.c_int32),
         ("rankhaus", ctypes.c_float),
         ("thresh", ctypes.c_float),
         ("weightfactor", ctypes.c_float),
-        ("naarea", ctypes.POINTER(NUMA)),
+        ("naarea", ctypes.POINTER(_NUMA)),
         ("w", ctypes.c_int32),
         ("h", ctypes.c_int32),
         ("nclass", ctypes.c_int32),
         ("keep_pixaa", ctypes.c_int32),
-        ("pixaa", ctypes.POINTER(PIXAA)),
-        ("pixat", ctypes.POINTER(PIXA)),
-        ("pixatd", ctypes.POINTER(PIXA)),
-        ("nahash", ctypes.POINTER(NUMAHASH)),
-        ("nafgt", ctypes.POINTER(NUMA)),
-        ("ptac", ctypes.POINTER(PTA)),
-        ("ptact", ctypes.POINTER(PTA)),
-        ("naclass", ctypes.POINTER(NUMA)),
-        ("napage", ctypes.POINTER(NUMA)),
-        ("ptaul", ctypes.POINTER(PTA)),
-        ("ptall", ctypes.POINTER(PTA))
+        ("pixaa", ctypes.POINTER(_PIXAA)),
+        ("pixat", ctypes.POINTER(_PIXA)),
+        ("pixatd", ctypes.POINTER(_PIXA)),
+        ("nahash", ctypes.POINTER(_NUMAHASH)),
+        ("nafgt", ctypes.POINTER(_NUMA)),
+        ("ptac", ctypes.POINTER(_PTA)),
+        ("ptact", ctypes.POINTER(_PTA)),
+        ("naclass", ctypes.POINTER(_NUMA)),
+        ("napage", ctypes.POINTER(_NUMA)),
+        ("ptaul", ctypes.POINTER(_PTA)),
+        ("ptall", ctypes.POINTER(_PTA))
     ]
+
+class JBCLASSER(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _JBCLASSER
 
 
 

@@ -11,5 +11,4 @@
 ./leptonica/leptonica_header_parser.py
 ./leptonica/leptonica_structures.py
 ./leptonica/leptonica_utils.py
-./leptonica_functions.py~
 ./setup.py

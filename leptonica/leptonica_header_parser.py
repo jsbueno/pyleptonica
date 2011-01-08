@@ -31,8 +31,6 @@ of leptonica
 import sys
 from config import leptonica_home
 
-# FIXME: automate this:
-
 lepton_source_dir = leptonica_home + "/src/"
 target_file = "leptonica_structures.py"
 
@@ -176,28 +174,36 @@ def parse_structs(code):
                 decl_line = [var_type]
     return structs    
 
-class_template = '''
-class %(name)s(ctypes.Structure):
+# TODO: Parse the structures comments and add then as docstrings here.
+class_template = '''\
+class _%(name)s(ctypes.Structure):
     """%(comments)s
     """
     _fields_ = [
         %(rendered_fields)s
     ]
 
-'''
+class %(name)s(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _%(name)s
 
+'''
 #If a  structure contains pointers to themselves, we need
 # to declare the class, and set the fields afterwards
 
-class_recurse_template = '''
-class %(name)s(ctypes.Structure):
+class_recurse_template = '''\
+class _%(name)s(ctypes.Structure):
     """%(comments)s
     """
     pass
 
-%(name)s._fields_ = [
+_%(name)s._fields_ = [
         %(rendered_fields)s
     ]
+
+class %(name)s(LeptonObject):
+    __metaclass__ = MetaPointer
+    _type_ = _%(name)s
 '''
 
 field_template = """("%(name)s", %(data_type)s)"""
@@ -209,14 +215,23 @@ def render_class(struct_name, body, recursive=False):
     for field_name, data_type in body:
         if data_type in lepton_types:
             data_type = lepton_types[data_type]
+            is_native_type = True
+        else:
+            is_native_type = False
         indirections = 0
         while field_name.startswith("*"):
             indirections += 1
             field_name = field_name[1:].strip()
             if data_type !=  lepton_types["void"] or indirections > 1:
-                data_type = "ctypes.POINTER(%s)" % data_type
+                # FIXME: Maybe make the structures members also be our advanced
+                # hybrid type? I think it is not needed
+                if is_native_type:
+                    data_type = "ctypes.POINTER(%s)" % data_type
+                else:
+                    data_type = "ctypes.POINTER(_%s)" % data_type
+                    is_native_type = True
         rendered = field_template % {"name": field_name, 
-            "data_type": data_type}
+            "data_type": ("_" if not is_native_type else "") + data_type}
         fields.append(rendered)
     rendered_fields = ",\n        ".join(fields)
     text = template % {"name": struct_name, 
@@ -231,11 +246,75 @@ def parse_file(file_name):
     return structs
 
 file_template = """
-#coding: utf-8
+# coding: utf-8
 # Author: João S. O. Bueno
 # This is a generated file - do not edit!
 
 import ctypes
+import weakref
+
+class LeptonObject(object):
+    def __new__(cls, *args):
+        data = None
+        if len(args) != 1:
+            from leptonica_functions import functions
+            if hasattr(functions, cls.__name__.lower() + "Create"):
+                constructor = getattr(functions, cls.__name__.lower() +
+                    "Create")
+                return constructor(*args)
+            data = cls._type_(*args)
+            address = ctypes.addressof(data)
+        else:
+            address = args[0]
+            if isinstance (address, ctypes.c_void_p):
+                address = address.value
+        if address in cls._instances_:
+            return cls._instances_[address]()
+        self = object.__new__(cls)
+        self._address_ = ctypes.c_void_p(address)
+        cls._instances_[address] = weakref.ref(self)
+        if data:
+            self._data_ = data
+        return self
+
+    def __repr__(self):
+        repr_ = "Leptonica %%s object\\n" %% self.__class__.__name__
+        if self._address_:
+            for field in self._type_._fields_:
+                repr_ += "    %%s: %%s,\\n" %% (field[0], getattr(self, field[0]))
+        else:
+            repr_ += "Not initiated or destroyed\\n"
+        return repr_
+    def __hash__(self):
+        return self._address_.value
+    
+    def __del__(self):
+        cls = self.__class__
+        del cls._instances_[self._address_.value]
+        from leptonica_functions import functions
+        if hasattr(functions, cls.__name__.lower() + "Destroy"):
+            destrutor = getattr(functions, cls.__name__.lower() + "Destroy")
+            destrutor(ctypes.c_void_p(ctypes.addressof(self._address_)))
+
+def property_factory(raw_structure, field_name):
+    return  property(lambda s: getattr(
+                        raw_structure.from_address(s._address_.value),
+                        field_name),
+                     lambda s, val: setattr(
+                        raw_structure.from_address(s._address_.value),
+                        field_name, val)
+                    )
+
+class MetaPointer(type): 
+    def __new__(cls, name, bases, dic):
+        base_struct = dic["_type_"]
+        for field, type_ in base_struct._fields_:
+            pr = property_factory(base_struct, field)
+            dic[field] = pr
+        dic["_instances_"] = {}
+        return type(name, bases, dic)
+
+
 
 %(classes)s
 
