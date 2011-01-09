@@ -26,7 +26,7 @@ import leptonica_functions as lep
 import ctypes
 import struct
 
-def lepImgToPil(lep_img, has_alpha=False):
+def pixToPILImage(lep_img, has_alpha=False):
     if not has_alpha:
         a = "\xff"
     if lep_img.d != 32:
@@ -58,36 +58,16 @@ def lepImgToPil(lep_img, has_alpha=False):
     return pil_img
     
 
-def pilImgToLep(pil_img):
+def PILImageToPix(pil_img):
     if pil_img.mode != "RGBA":
         raise NotImplementedError ("Can only promote RGBA" 
             " images to Leptonica")
-    lep_img = lep.PIX()
-    lep_img.w, lep_img.h = pil_img.size
-    lep_img.d = 32
-    #row stride - will equal width for 32bpp images
-    lep_img.wpl = lep_img.w
-    lep_img.refcount = 1
-    lep_img.xres = lep_img.yres = 0
-    lep_img.informat = 3 #3 for PNG. TODO: import leptonica enums
-    lep_img.text = None
-    lep_img.colormap = None
-    size = pil_img.size[0] * pil_img.size[1]
-    lep_img.data = ctypes.cast((ctypes.c_uint32 * size)(),
-        ctypes.POINTER(ctypes.c_uint32))
-    # fortunatelly the code bellow crashes,
-    # so I could read a bit more and learn about ctypes arrays:
-    #ctypes.POINTER(ctypes.c_uint32).from_address(
-    #    lep.libc.malloc(lep_img.w * lep_img.h * 4))
-    #if not lep_img.data: #malloc returned NULL
-    #    raise MemoryError("Could not allocate memory for image body")
+    w, h = pil_img.size
+    depth = 32
+    lep_img = lep.PIX(w, h, depth)
+    size = w * h
     img_data = pil_img.tostring()
-    #return lep_img
     for i in xrange(0, len(img_data), 4):
-        #r = img_data[i]
-        #g = img_data[i + 1]
-        #b = img_data[i + 2]
-        #a = img_data[i + 3]
         lep_img.data[i // 4] = struct.unpack(">I", img_data[i:i+4])[0]
     return lep_img
 
