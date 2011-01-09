@@ -59,7 +59,11 @@ def pixToPILImage(lep_img, has_alpha=False):
     
 
 def PILImageToPix(pil_img):
-    if pil_img.mode != "RGBA":
+    if pil_img.mode == "RGBA":
+        step = 4
+    #elif pil_img.mode == "RGB":
+    #    step = 3
+    else:
         raise NotImplementedError ("Can only promote RGBA" 
             " images to Leptonica")
     w, h = pil_img.size
@@ -67,8 +71,9 @@ def PILImageToPix(pil_img):
     lep_img = lep.PIX(w, h, depth)
     size = w * h
     img_data = pil_img.tostring()
-    for i in xrange(0, len(img_data), 4):
-        lep_img.data[i // 4] = struct.unpack(">I", img_data[i:i+4])[0]
+    for i in xrange(0, len(img_data), step):
+        lep_img.data[i // 4] = struct.unpack(">I", img_data[i:i+step] +
+            ("\x00" if step == 3 else ""))[0]
     return lep_img
 
     
