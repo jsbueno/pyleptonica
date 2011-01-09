@@ -43,7 +43,8 @@ class LeptonObject(object):
     
     def __del__(self):
         cls = self.__class__
-        del cls._instances_[self._address_.value]
+        if self._address_:
+            del cls._instances_[self._address_.value]
         from leptonica_functions import functions
         if hasattr(functions, cls.__name__.lower() + "Destroy"):
             destrutor = getattr(functions, cls.__name__.lower() + "Destroy")
