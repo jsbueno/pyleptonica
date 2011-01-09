@@ -26,54 +26,42 @@ import leptonica_functions as lep
 import ctypes
 import struct
 
-def pixToPILImage(lep_img, has_alpha=False):
-    if not has_alpha:
-        a = "\xff"
-    if lep_img.d != 32:
-        raise NotImplementedError ("Can only promote RGB or" 
-            " RGBA images to PIL")
-    buf = ctypes.create_string_buffer(lep_img.wpl * lep_img.h * 4)
-    ctypes.memmove(buf, lep_img.data, lep_img.wpl * lep_img.h * 4)
-    # And after this alwesomely fast byte copying...
-    # we have to _reorder_ the bytes because lpetonica
-    # uses the reversed order for them.--
-    # moreover if the image uses no Alpha, all alpha bytes have
-    # value 0 - while we want them to have 255 for PIL
-    # FIXME: 
-    # I don't want to add C parts to this module,
-    # but maybe we should have a numpy dependent alternative
-    # for this? Other ideas? Corepy? 
-    for i in xrange(0,len(buf),4):
-        if has_alpha:
-            a = buf[i]
-        r = buf[i + 3]
-        g = buf[i + 2]
-        b = buf[i + 1]
-        buf[i] = r
-        buf[i + 1] = g
-        buf[i + 2] = b
-        buf[i + 3] = a
-    pil_img = Image.frombuffer( "RGBA", (lep_img.w, lep_img.h), buf,
+
+def pixToPILImage(pixs, has_alpha=False):
+    if pixs.d != 32:
+        raise TypeError("Currently this only works for 24 or 32 bit images")
+    #Swap image Bytes
+    le_pix = lep.functions.pixEndianByteSwapNew(pixs)
+    
+    # Some ctypes black magic to get the right types
+    data_pointer =  ctypes.cast(le_pix.data, ctypes.POINTER(  ctypes.c_uint32 * (le_pix.w * le_pix.h)))
+    # before beeing able to  create a functioning 
+    # buffer object from the image data:
+    img_buffer = buffer(data_pointer.contents)
+    pil_img = Image.frombuffer( "RGBA", (pixs.w, pixs.h), img_buffer,
         "raw", "RGBA", 0, 1)
-    return pil_img
+    # However, this buffer will be destroyed when this function ends - so
+    # we must copy the data around once more, even when keeping the same (RGBA) mode
+    mode = "RGBA" if has_alpha else "RGB"
+    return pil_img.convert(mode)
     
 
 def PILImageToPix(pil_img):
-    if pil_img.mode == "RGBA":
-        step = 4
-    #elif pil_img.mode == "RGB":
-    #    step = 3
-    else:
-        raise NotImplementedError ("Can only promote RGBA" 
-            " images to Leptonica")
+    if pil_img.mode != "RGBA":
+        pil_img = pil_img.convert("RGBA")
     w, h = pil_img.size
     depth = 32
     lep_img = lep.PIX(w, h, depth)
     size = w * h
     img_data = pil_img.tostring()
-    for i in xrange(0, len(img_data), step):
-        lep_img.data[i // 4] = struct.unpack(">I", img_data[i:i+step] +
-            ("\x00" if step == 3 else ""))[0]
+    # ctypes miss a way to get the string buffer as  a memory read source
+    interm_buffer = ctypes.c_buffer(img_data)
+    ctypes.memmove(lep_img.data, interm_buffer, len(img_data))
+    lep.functions.pixEndianByteSwap(lep_img)    
+    # Normally in Leptonica the alpha byte is set to "zero"
+    # I am betting there is no problem leaving the same value
+    # that comes from PIL (255 for opaque) for non transaprency use in
+    # leptonica
     return lep_img
 
     
