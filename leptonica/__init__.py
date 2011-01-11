@@ -18,6 +18,7 @@
 from leptonica_structures import *
 from leptonica_functions import *
 from leptonica_utils import *
+import leptonica_enums as enums
 
 #
 # The leptonica_functions_parser.py and leptonica_header_parser

@@ -12,18 +12,18 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name = "pyleptonica",
-    version = "0.2",
+    version = "0.8",
     description = "Wrapper and wrapper generators for the 2D Image Leptonica Library",
     author = u"João Sebastião de Oliveira Bueno",
     author_email = "jsbueno@python.org.br",
-    license = "Lesser GNU Public Licnee 3.0 or above",
-    url = "http://code.google.com/p/pylepthonica/downloads/detail?name=pyleptonica-0.2.tar.gz&can=2&q=",
+    license = "Lesser GNU Public License 3.0 or above",
+    url = "http://code.google.com/p/pylepthonica/downloads/detail?name=pyleptonica-0.8.tar.gz&can=2&q=",
     packages = ["leptonica"],
     package_data = {'leptonica' : files },
     scripts = [],
     long_description = read("README"),
     classifiers=[
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Environment :: Other Environment",
     "Intended Audience :: Developers",

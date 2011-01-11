@@ -9,7 +9,7 @@ structures used in Leptonica are available as classes from Python.
 This Library is licensed under the Lesser GNU Public License Version 3 or Later.
 
 Leptonica data structures are available as authomaticaly generated Python objects,
-transparently calling Leptonica's constructors and Detrutors when those
+transparently calling Leptonica's constructors and Destrutors when those
 exist.
 
 Threfore for a new image object (represented in Leptonica as a "PIX" structure). 
@@ -38,9 +38,9 @@ To run it, you might not need to have Leptonica source files:
 I versioned the generated files as well so that most people just have
 to copy the .py files around. If you want to hack the code, or generate 
 wrappers for other versions of Leptonica, you have to execute
-the leptonica_header_parser.py and leptonica_function_parser.py as stand
-alone programs, after tunning a config.py from the config_remplate.py
-file.
+the leptonica_header_parser.py, leptonica_function_parser.py and
+leptonica_enum_parser.py as stand alone programs, after tunning a
+config.py from the config_remplate.py file.
 
 There are at this time, two utility functions to convert 
 Leptonica images to and from Python Imaging Library (PIL) Images.
