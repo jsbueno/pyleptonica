@@ -31,6 +31,11 @@ import ctypes
 # SARRAY
 
 def __getitem__(self, item):
+    if isinstance(item, slice):
+        lst = []
+        for index in xrange(*item.indices(self.n)):
+            lst.append(self[index])
+        return lst
     if not (-self.n <= item < self.n):
         raise IndexError
     if item < 0:
