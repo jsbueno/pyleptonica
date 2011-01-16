@@ -8,9 +8,11 @@ import leptonica_structures as structs
 try:
     leptonica = ctypes.cdll.LoadLibrary("liblept.so")
     libc = ctypes.cdll.LoadLibrary("libc.so.6")
-except OSError:
+except OSError: 
+    # Known issue: liblept.so fails to load in ctypes with
+    # Ubuntu 10.10 package - probably due to a missing dependence
     #Windows: untested ! 
-    import ctypes.utils
+    import ctypes.util
     leptonica = ctypes.cdll.LoadLibrary("liblept.dll")
     libc = ctypes.cdll.LoadLibrary(ctypes.util.find_msvcrt())
 

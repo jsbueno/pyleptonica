@@ -26,26 +26,91 @@
 """
 
 import leptonica_structures as structures
+from leptonica_functions import functions, pix3
 import ctypes
 
-# SARRAY
-
-def __getitem__(self, item):
-    if isinstance(item, slice):
+def _getitem(getter, obj, index):
+    if isinstance(index, slice):
         lst = []
-        for index in xrange(*item.indices(self.n)):
-            lst.append(self[index])
+        for n_index in xrange(*index.indices(obj.n)):
+            lst.append(obj[n_index])
         return lst
-    if not (-self.n <= item < self.n):
+    if not (-obj.n <= index < obj.n):
         raise IndexError
-    if item < 0:
-        item += self.n
-    return ctypes.string_at(ctypes.cast(self.array[item], ctypes.c_char_p))
+    if index < 0:
+        index += obj.n
+    return getter(obj, index)
 
-def __len__(self):
+def _len(self):
     return self.n
 
-structures.SARRAY.__getitem__ = __getitem__
-structures.SARRAY.__len__ = __len__
 
-del __getitem__, __len__
+# SARRAY
+sarray_getter = lambda obj, index: ctypes.string_at(ctypes.cast(obj.array[index],
+                                    ctypes.c_char_p))
+
+
+structures.SARRAY.__getitem__ = lambda self, index: _getitem(sarray_getter, self, index)
+structures.SARRAY.__len__ = _len
+
+# PIXA
+def _real_pixa_set_item(self, index, value):
+    if not isinstance(value, structures.PIX):
+        raise TypeError
+    clone = functions.pixClone(value)
+    clone._needs_del = False
+    pointer = ctypes.cast(clone._address_, ctypes.POINTER(structures._PIX))
+    self.pix[index] = pointer
+
+def __setitem__(self, index, value):
+    if not (-self.n < index <= self.n):
+        raise IndexError
+    if index < 0:
+        index += self.n
+    old_pix = structures.PIX(from_address=ctypes.cast(self.pix[index], ctypes.c_void_p))
+    self.pix[index] = None
+    del old_pix
+    _real_pixa_set_item(self, index, value)
+
+
+def append(self, value):
+    if self.n >= self.nalloc:
+        raise IndexError("PIXA Object at maximum capacity (%d) " % self.nalloc)
+    self.n += 1
+    _real_pixa_set_item(self, self.n - 1, value)
+
+def pixa_getter(self, index):
+    value = structures.PIX(from_address=ctypes.cast(self.pix[index],
+            ctypes.c_void_p) )
+    value._needs_del = False
+    return functions.pixClone(value)
+    
+structures.PIXA.__getitem__ = lambda self, index: _getitem(pixa_getter, self, index)
+structures.PIXA.append = append
+structures.PIXA.__setitem__ = __setitem__
+
+del __setitem__, append
+
+#FIXME: move to function patches when that exists
+# fix pixInvert
+# (It is more likely pixInvert should increment the reference count)
+# if there are other "inplace" functions
+# that return a clone with no increase in refcount, we have
+# to apply the same wrapper.
+from functools import wraps
+originalPixInvert = pix3.pixInvert
+@staticmethod
+@wraps(functions.pixInvert)
+def pixInvert(pixd, pixs):
+    res = originalPixInvert(pixd, pixs)
+    if not pixd:
+        #pixInvert returns a new PIX and everything is fine
+        return res
+    #pixInvert returns an instance of an already existing PIX, with no increase in refcount
+    res._needs_del = False
+    return functions.pixClone(res)
+
+functions.pixInvert = pixInvert
+pix3.pixInvert = pixInvert
+
+

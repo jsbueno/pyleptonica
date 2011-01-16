@@ -4,7 +4,7 @@
 # This is a generated file - do not edit!
 
 import ctypes
-import weakref
+#import weakref
 
 class LeptonObject(object):
     def __new__(cls, *args, **kw):
@@ -28,14 +28,24 @@ class LeptonObject(object):
             address = kw["from_address"]
             if isinstance (address, ctypes.c_void_p):
                 address = address.value
-        if address in cls._instances_:
-            return cls._instances_[address]()
+        #if address in cls._instances_:
+        #    return cls._instances_[address]()
         self = object.__new__(cls)
+        self._needs_del = True
         self._address_ = ctypes.c_void_p(address)
-        cls._instances_[address] = weakref.ref(self)
+        #cls._instances_[address] = weakref.ref(self)
         if data:
             self._data_ = data
         return self
+    def __getattribute__(self, attr):
+        if attr in ("_address_", "refcount"):
+            return object.__getattribute__(self, attr)
+        if not self._address_:
+            raise ValueError("Object no longer exists")
+        if self.refcount < 1:
+            self._address_ = ctypes.c_void_p(None)
+            raise ValueError("Object no longer exists")
+        return object.__getattribute__(self, attr)
 
     def __repr__(self):
         repr_ = "Leptonica %s object\n" % self.__class__.__name__
@@ -50,10 +60,10 @@ class LeptonObject(object):
     
     def __del__(self):
         cls = self.__class__
-        if self._address_:
-            del cls._instances_[self._address_.value]
+        #if self._address_:
+        #    del cls._instances_[self._address_.value]
         from leptonica_functions import functions
-        if hasattr(functions, cls.__name__.lower() + "Destroy"):
+        if self._needs_del and hasattr(functions, cls.__name__.lower() + "Destroy"):
             destrutor = getattr(functions, cls.__name__.lower() + "Destroy")
             destrutor(ctypes.c_void_p(ctypes.addressof(self._address_)))
 
@@ -72,7 +82,7 @@ class MetaPointer(type):
         for field, type_ in base_struct._fields_:
             pr = property_factory(base_struct, field)
             dic[field] = pr
-        dic["_instances_"] = {}
+        #dic["_instances_"] = {}
         return type(name, bases, dic)
 
 
