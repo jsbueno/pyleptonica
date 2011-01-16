@@ -84,10 +84,25 @@ def pixa_getter(self, index):
             ctypes.c_void_p) )
     value._needs_del = False
     return functions.pixClone(value)
+
+#FIXME: this can be made generic - maybe even atomatized
+def new_getter_factory(old_property, cloner = None):
+    def new_getter(self):
+        b_ = old_property.__get__(self, self.__class__)
+        obj = structures.BOXA(from_address=ctypes.cast(b_, ctypes.c_void_p))
+        if not cloner:
+            obj.refcount += 1
+            return obj
+        obj._needs_del = False
+        new_obj = cloner(obj)    
+        return new_obj
+    return new_getter
     
 structures.PIXA.__getitem__ = lambda self, index: _getitem(pixa_getter, self, index)
 structures.PIXA.append = append
 structures.PIXA.__setitem__ = __setitem__
+structures.PIXA.boxa = property(new_getter_factory(structures.PIXA.boxa))
+structures.PIXA.__len__ = _len
 
 del __setitem__, append
 
