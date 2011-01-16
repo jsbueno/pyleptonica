@@ -26,8 +26,6 @@ import os
 import re
 from config import leptonica_home
 
-from config import leptonica_home
-
 lepton_source_dir = leptonica_home + "/src/"
 target_file = "leptonica_enums.py"
 

@@ -15,22 +15,32 @@
     #You should have received a copy of the Lesser GNU General Public License
     #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from leptonica_structures import *
-from leptonica_functions import *
-from leptonica_utils import *
-import leptonica_enums as enums
+"""
+   Structures Patcher: 
+        This file is loaded after the automatically generated structures file
+        and manually (monkey) patches some of them so that  they behave in
+        a more pythonic way, in ways that would not be possible
+        to do authomatically.
 
-#this file does some monkey patching on the structures upon running:
-import structures_patches
+        Subject to grow with time
+"""
 
-del structures_patches
+import leptonica_structures as structures
+import ctypes
 
+# SARRAY
 
-#
-# The leptonica_functions_parser.py and leptonica_header_parser
-# are used as stand alone programs to generate the
-# leptonica_functions.py and leptonica_structures.py
-# In case you want to hack around this code
-# or need to update to a different version of Leptonica
+def __getitem__(self, item):
+    if not (-self.n <= item < self.n):
+        raise IndexError
+    if item < 0:
+        item += self.n
+    return ctypes.string_at(ctypes.cast(self.array[item], ctypes.c_char_p))
 
-# the Leptonica.py file just contains a small usage example
+def __len__(self):
+    return self.n
+
+structures.SARRAY.__getitem__ = __getitem__
+structures.SARRAY.__len__ = __len__
+
+del __getitem__, __len__

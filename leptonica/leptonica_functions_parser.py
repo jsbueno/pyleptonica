@@ -190,7 +190,7 @@ def format_return_type(return_type):
     else: #Return type should be a pointer to one 
           #of the library defined structures
         if indirections == 1:
-            return_type = ("lambda address: %s(address)" % return_type)
+            return_type = ("lambda address: %s(from_address=address)" % return_type)
         # More than one indirection not promoted to the magic hybrid type:
         elif indirections > 1:
             return_type = "ctypes.c_void_p"
@@ -301,9 +301,11 @@ import leptonica_structures as structs
 try:
     leptonica = ctypes.cdll.LoadLibrary("liblept.so")
     libc = ctypes.cdll.LoadLibrary("libc.so.6")
-except OSError:
+except OSError: 
+    # Known issue: liblept.so fails to load in ctypes with
+    # Ubuntu 10.10 package - probably due to a missing dependence
     #Windows: untested ! 
-    import ctypes.utils
+    import ctypes.util
     leptonica = ctypes.cdll.LoadLibrary("liblept.dll")
     libc = ctypes.cdll.LoadLibrary(ctypes.util.find_msvcrt())
 

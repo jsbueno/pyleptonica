@@ -7,9 +7,16 @@ import ctypes
 import weakref
 
 class LeptonObject(object):
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kw):
+        """
+        Constructor for structure types.
+        Call with named argument "from_address" to
+        point it to an existing structure in memory, 
+        else it will try to automatically call Leptonica's
+        constructor for this structure
+        """
         data = None
-        if len(args) != 1:
+        if not kw or not "from_address" in kw:
             from leptonica_functions import functions
             if hasattr(functions, cls.__name__.lower() + "Create"):
                 constructor = getattr(functions, cls.__name__.lower() +
@@ -18,7 +25,7 @@ class LeptonObject(object):
             data = cls._type_(*args)
             address = ctypes.addressof(data)
         else:
-            address = args[0]
+            address = kw["from_address"]
             if isinstance (address, ctypes.c_void_p):
                 address = address.value
         if address in cls._instances_:
