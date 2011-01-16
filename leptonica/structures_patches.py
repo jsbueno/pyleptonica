@@ -44,6 +44,27 @@ def _getitem(getter, obj, index):
 def _len(self):
     return self.n
 
+#FIXME: this  maybe can be automatized
+def property_wrapper_factory(old_property, cloner = None):
+    """Wraps a previous object property - (that used
+       to access a value through the structure field pointed
+       by the _adress_ member ) with a new one
+       that effectvely yields a Python leptonica object out of 
+       the pointer recorded there, keeping track of the  reference counts
+       
+       ATM there is no setter - we will come to that when needed. 
+       (probably PIXCMAP in PIX objects)
+    """
+    def new_getter(self):
+        b_ = old_property.__get__(self, self.__class__)
+        obj = structures.BOXA(from_address=ctypes.cast(b_, ctypes.c_void_p))
+        if not cloner:
+            obj.refcount += 1
+            return obj
+        obj._needs_del = False
+        new_obj = cloner(obj)    
+        return new_obj
+    return property(new_getter)
 
 # SARRAY
 sarray_getter = lambda obj, index: ctypes.string_at(ctypes.cast(obj.array[index],
@@ -85,23 +106,12 @@ def pixa_getter(self, index):
     value._needs_del = False
     return functions.pixClone(value)
 
-#FIXME: this can be made generic - maybe even atomatized
-def new_getter_factory(old_property, cloner = None):
-    def new_getter(self):
-        b_ = old_property.__get__(self, self.__class__)
-        obj = structures.BOXA(from_address=ctypes.cast(b_, ctypes.c_void_p))
-        if not cloner:
-            obj.refcount += 1
-            return obj
-        obj._needs_del = False
-        new_obj = cloner(obj)    
-        return new_obj
-    return new_getter
+
     
 structures.PIXA.__getitem__ = lambda self, index: _getitem(pixa_getter, self, index)
 structures.PIXA.append = append
 structures.PIXA.__setitem__ = __setitem__
-structures.PIXA.boxa = property(new_getter_factory(structures.PIXA.boxa))
+structures.PIXA.boxa = property_wrapper_factory(structures.PIXA.boxa)
 structures.PIXA.__len__ = _len
 
 del __setitem__, append

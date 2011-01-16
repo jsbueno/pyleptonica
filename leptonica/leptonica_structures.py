@@ -50,8 +50,15 @@ class LeptonObject(object):
     def __repr__(self):
         repr_ = "Leptonica %s object\n" % self.__class__.__name__
         if self._address_:
+            rendered_fields = []
             for field in self._type_._fields_:
-                repr_ += "    %s: %s,\n" % (field[0], getattr(self, field[0]))
+                name = field[0]
+                content = getattr(self, name)
+                if isinstance(content, LeptonObject):
+                    # Add an identation level for nested objects:
+                    content = "\n    ".join(repr(content).split("\n") )
+                rendered_fields.append("    %s: %s" % (name, content))
+            repr_ += "\n" + ",\n".join(rendered_fields)
         else:
             repr_ += "Not initiated or destroyed\n"
         return repr_
