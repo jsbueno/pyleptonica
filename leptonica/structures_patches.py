@@ -45,7 +45,14 @@ def _len(self):
     return self.n
 
 #FIXME: this  maybe can be automatized
-def property_wrapper_factory(old_property, cloner = None):
+
+def get_cloner_destrutor(type_):
+    name = type.__name__.lower()
+    cloner_name = name + "Clone"
+    destrutor_name = name + "Destroy"
+    return getattr(functions, cloner_name, None), getattr(functions, destrutor_name, None)
+
+def property_wrapper_factory(old_property, ref_type):
     """Wraps a previous object property - (that used
        to access a value through the structure field pointed
        by the _adress_ member ) with a new one
@@ -55,16 +62,76 @@ def property_wrapper_factory(old_property, cloner = None):
        ATM there is no setter - we will come to that when needed. 
        (probably PIXCMAP in PIX objects)
     """
+    cloner, destrutor = get_cloner_destrutor(ref_type)
     def new_getter(self):
         b_ = old_property.__get__(self, self.__class__)
-        obj = structures.BOXA(from_address=ctypes.cast(b_, ctypes.c_void_p))
+        obj = ref_type(from_address=ctypes.cast(b_, ctypes.c_void_p))
         if not cloner:
-            obj.refcount += 1
+            if hasattr(obj, "refcount"):
+                obj.refcount += 1
             return obj
         obj._needs_del = False
         new_obj = cloner(obj)    
         return new_obj
-    return property(new_getter)
+    def new_setter(self, value):
+        if not isinstance(value, ref_type):
+            raise TypeError("This attribute must be of type %s " % ref_type)
+        raw_type = getattr(structures, "_" + ref_type.__name__)
+        #raw_structure = raw_type.from_address(self._address_.value)
+        #del previous instance:
+        b_ = old_property.__get__(self, self.__class__)
+        # When instancing a Python object with "from address"
+        # refcount is not increased
+        obj = ref_type(from_address=ctypes.cast(b_, ctypes.c_void_p))
+        del obj
+        if cloner:
+            new_obj = cloner(value)
+            new_obj._needs_del = False
+        else:
+            # Python won't call "__del__"  on new_obj just aliased to value
+            # (cpython 2.6) 
+            new_obj = value
+            if hasattr(value, "refcount"):
+                value.refcount += 1
+        pointer = ctypes.cast(new_obj._address_, ctypes.POINTER(raw_type))
+        old_property.__set__(self, pointer)
+        
+    return property(new_getter, new_setter)
+
+# TODO: 
+# build these wrappers straight into the genrated classes
+def rewrap_leptonica_fields():
+    """This function looks into all Python objects defined in 
+    leptonica structures, and for each field (atttribute) that
+    holds a referene to another leptonica object (in the original C,
+    a simple pointer), rewrapps the access to this field on
+    the high level class so that an actual Python instance
+    of the equivalent object can be used to get/set the field
+    
+    These higher level acessors also take care of the reference counting
+    """
+    for cls_name in structures.__dict__.keys():
+        #Filter only the pairs for low level/high level structures:
+        if cls_name.startswith("_") or ("_" + cls_name) not in structures.__dict__:
+            continue
+        
+        hi_cls = structures.__dict__[cls_name]
+        lo_cls = structures.__dict__["_" + cls_name]
+        for f_name, f_type in lo_cls._fields_:
+            type_name = f_type.__name__
+            if not type_name.startswith("LP_"):
+                continue
+            if not type_name[3:] in structures.__dict__:
+                continue
+            #now, this field 
+            # which is already a generated property
+            #should be wrapped with a new property fot the high level access
+            prop_cls = structures.__dict__[type_name[4:]]
+            setattr(hi_cls, f_name,
+                property_wrapper_factory(getattr(hi_cls, f_name), prop_cls))
+
+rewrap_leptonica_fields()
+
 
 # SARRAY
 sarray_getter = lambda obj, index: ctypes.string_at(ctypes.cast(obj.array[index],
@@ -111,7 +178,7 @@ def pixa_getter(self, index):
 structures.PIXA.__getitem__ = lambda self, index: _getitem(pixa_getter, self, index)
 structures.PIXA.append = append
 structures.PIXA.__setitem__ = __setitem__
-structures.PIXA.boxa = property_wrapper_factory(structures.PIXA.boxa)
+#structures.PIXA.boxa = property_wrapper_factory(structures.PIXA.boxa, structures.BOXA)
 structures.PIXA.__len__ = _len
 
 del __setitem__, append

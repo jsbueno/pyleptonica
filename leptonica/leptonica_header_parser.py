@@ -285,11 +285,11 @@ class LeptonObject(object):
             self._data_ = data
         return self
     def __getattribute__(self, attr):
-        if attr in ("_address_", "refcount"):
+        if attr in ("_address_", "refcount", "__class__"):
             return object.__getattribute__(self, attr)
         if not self._address_:
             raise ValueError("Object no longer exists")
-        if self.refcount < 1:
+        if hasattr(self.__class__, "refcount") and self.refcount < 1:
             self._address_ = ctypes.c_void_p(None)
             raise ValueError("Object no longer exists")
         return object.__getattribute__(self, attr)
