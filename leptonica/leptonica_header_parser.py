@@ -312,10 +312,15 @@ class LeptonObject(object):
     def __hash__(self):
         return self._address_.value
     
+    def __eq__(self, other):
+        return self._address_.value == other._address_.value
+    
     def __del__(self):
         cls = self.__class__
         #if self._address_:
         #    del cls._instances_[self._address_.value]
+        if not hasattr(cls, "refcount"):
+            return
         from leptonica_functions import functions
         if self._needs_del and hasattr(functions, cls.__name__.lower() + "Destroy"):
             destrutor = getattr(functions, cls.__name__.lower() + "Destroy")

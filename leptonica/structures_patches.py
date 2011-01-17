@@ -133,6 +133,14 @@ def rewrap_leptonica_fields():
 rewrap_leptonica_fields()
 
 
+# Classes that reference an array of other object type
+# and have to be customized to deal with it:
+
+#
+#['PIXACOMP', 'SARRAY', 'BOXA', 'PIXCOLORMAP', 'BYTEBUFFER', 'PTA', 'CCBORDA', 'L_HEAP', 'PTAA', 'PIXAA', 'PIXA', 'L_STACK', 'L_PTRA', 'L_PTRAA', 'L_QUEUE', 'NUMA', 'BOXAA', 'SELA', 'NUMAA']
+#
+
+
 # SARRAY
 sarray_getter = lambda obj, index: ctypes.string_at(ctypes.cast(obj.array[index],
                                     ctypes.c_char_p))
@@ -141,47 +149,87 @@ sarray_getter = lambda obj, index: ctypes.string_at(ctypes.cast(obj.array[index]
 structures.SARRAY.__getitem__ = lambda self, index: _getitem(sarray_getter, self, index)
 structures.SARRAY.__len__ = _len
 
-# PIXA
-def _real_pixa_set_item(self, index, value):
-    if not isinstance(value, structures.PIX):
-        raise TypeError
-    clone = functions.pixClone(value)
-    clone._needs_del = False
-    pointer = ctypes.cast(clone._address_, ctypes.POINTER(structures._PIX))
-    self.pix[index] = pointer
+# Others:
 
-def __setitem__(self, index, value):
-    if not (-self.n < index <= self.n):
-        raise IndexError
-    if index < 0:
-        index += self.n
-    old_pix = structures.PIX(from_address=ctypes.cast(self.pix[index], ctypes.c_void_p))
-    self.pix[index] = None
-    del old_pix
-    _real_pixa_set_item(self, index, value)
-
-
-def append(self, value):
-    if self.n >= self.nalloc:
-        raise IndexError("PIXA Object at maximum capacity (%d) " % self.nalloc)
-    self.n += 1
-    _real_pixa_set_item(self, self.n - 1, value)
-
-def pixa_getter(self, index):
-    value = structures.PIX(from_address=ctypes.cast(self.pix[index],
-            ctypes.c_void_p) )
-    value._needs_del = False
-    return functions.pixClone(value)
-
-
+def make_sequence(cls, field_name):
+    cls_name = cls.__name__
+    cloner, destrutor = get_cloner_destrutor(cls)
+    elem_type_name = dict(getattr(getattr(structures, "_" + cls_name),
+        "_fields_"))[field_name].__name__[len("LP_LP__"):]
+    elem_type = getattr(structures, elem_type_name)
+    raw_elem_type = getattr(structures, "_" + elem_type_name)
     
-structures.PIXA.__getitem__ = lambda self, index: _getitem(pixa_getter, self, index)
-structures.PIXA.append = append
-structures.PIXA.__setitem__ = __setitem__
-#structures.PIXA.boxa = property_wrapper_factory(structures.PIXA.boxa, structures.BOXA)
-structures.PIXA.__len__ = _len
+    def _real_set_item(self, index, value):
+        if not isinstance(value, elem_type):
+            raise TypeError("Element of %s must be a %s " % (field_name, elem_type))
+        if cloner:
+            clone = cloner(value)
+            clone._needs_del = False
+        else:
+            clone = value
+            if hasattr(value, "refcount"):
+                value.refcount += 1
+        pointer = ctypes.cast(clone._address_, ctypes.POINTER(raw_elem_type))
+        getattr(self, field_name)[index] = pointer
 
-del __setitem__, append
+    def __setitem__(self, index, value):
+        if not (-self.n < index <= self.n):
+            raise IndexError
+        if index < 0:
+            index += self.n
+        old_value = elem_type(from_address=ctypes.cast(
+                                getattr(self,field_name)[index], 
+                                ctypes.c_void_p))
+        #Important - if C's leptonica destructor is called on
+        # an object that has one ctypes.POINTER object
+        # referencing it (the objects with "LP_" in their names)
+        # we get a segmentation fault:
+        getattr(self, field_name)[index] = None
+        del old_value
+        #non local function:
+        _real_set_item(self, index, value)
+
+    def append(self, value):
+        if self.n >= self.nalloc:
+            raise IndexError("%s Object at maximum capacity (%d) " %
+                                (cls_name ,self.nalloc))
+        self.n += 1
+        _real_set_item(self, self.n - 1, value)
+
+    def getter(self, index):
+        value = elem_type(from_address=ctypes.cast(getattr(self,field_name)[index],
+                ctypes.c_void_p))
+        if cloner:
+            value._needs_del = False
+            return cloner(value)
+        if hasattr(value, "refcount"):
+            value.refcount += 1
+        return value
+
+    setattr(cls, "__getitem__", lambda s, index: _getitem(getter, s, index))
+    setattr(cls, "append", append)
+    setattr(cls,"__setitem__", __setitem__)
+    setattr(cls, "__len__", _len)
+
+# Exceptions (some of these just happen to have non-leptonica types
+# as their elements:
+#( PIXCOLORMAP ( BYTEBUFFER ( PTA ( L_HEAP ( ( L_STACK ( L_PTRA ( L_QUEUE ( NUMA (
+
+all_classes = [
+( "PIXACOMP" , "pixc" ), # LP_LP__PIXCOMP
+( "BOXA" , "box" ), # LP_LP__BOX
+( "CCBORDA" , "ccb" ), # LP_LP__CCBORD
+( "PTAA" , "pta" ), # LP_LP__PTA
+( "PIXAA" , "pixa" ), # LP_LP__PIXA
+( "PIXA" , "pix" ), # LP_LP__PIX
+( "L_PTRAA" , "ptra" ), # LP_LP__L_PTRA
+( "BOXAA" , "boxa" ), # LP_LP__BOXA
+( "SELA" , "sel" ), # LP_LP__SEL
+( "NUMAA" , "numa" ), # LP_LP__NUMA
+]
+
+for cls, field in all_classes:
+    make_sequence(getattr(structures, cls), field)
 
 #FIXME: move to function patches when that exists
 # fix pixInvert
