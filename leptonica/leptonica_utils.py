@@ -21,12 +21,17 @@ This file puts some utility functions, mostly for converting from
 and to leptonica used types
 """
 
-from PIL import Image
 import leptonica_functions as lep
 import ctypes
 import struct
 
-
+try:
+    from PIL import Image
+except ImportError:
+    ok = False
+else:
+    ok = True
+    
 def pixToPILImage(pixs, has_alpha=False):
     if pixs.d != 32:
         raise TypeError("Currently this only works for 24 or 32 bit images")
@@ -64,5 +69,10 @@ def PILImageToPix(pil_img):
     # leptonica
     return lep_img
 
-    
-    
+if ok:
+    __all__ = ["PILImageToPix", "pixToPILImage"]
+else:
+    __all__ = []
+del ok
+
+
