@@ -32,7 +32,7 @@ def find_siblings(const, as_string=False):
 
 class ConstType(Const):
     '''
-       ------------------------------------------------------------------------* 
+       ------------------------------------------------------------------------*
                               Array flags                               *
 ------------------------------------------------------------------------*/
 
@@ -55,17 +55,19 @@ del ConstType
 
 class ConstType(Const):
     '''
-        Flags for added borders in Numa */
+        Flags for added borders in Numa and Fpix */
 enum {
-    L_EXTENDED_BORDER = 1,      /* extended with same value           */
-    L_MIRRORED_BORDER = 2       /* mirrored                           */
+    L_CONTINUED_BORDER = 1,     /* extended with same value                  */
+    L_SLOPE_BORDER = 2,         /* extended with constant normal derivative  */
+    L_MIRRORED_BORDER = 3       /* mirrored                                  */
 }
     '''
 
-ConstType.__name__ = "flags_for_added_borders_in_numa"
+ConstType.__name__ = "flags_for_added_borders_in_numa_and_fpix"
 
-L_EXTENDED_BORDER = ConstType("L_EXTENDED_BORDER", 1, '''extended with same value ''')
-L_MIRRORED_BORDER = ConstType("L_MIRRORED_BORDER", 2, '''mirrored ''')
+L_CONTINUED_BORDER = ConstType("L_CONTINUED_BORDER", 1, '''extended with same value ''')
+L_SLOPE_BORDER = ConstType("L_SLOPE_BORDER", 2, '''extended with constant normal derivative ''')
+L_MIRRORED_BORDER = ConstType("L_MIRRORED_BORDER", 3, '''mirrored ''')
 
 
 del ConstType
@@ -74,8 +76,26 @@ del ConstType
 
 class ConstType(Const):
     '''
-        
-  bmf.h
+        Flags for data type converted from Numa */
+enum {
+    L_INTEGER_VALUE = 1,        /* convert to integer  */
+    L_FLOAT_VALUE = 2           /* convert to float    */
+}
+    '''
+
+ConstType.__name__ = "flags_for_data_type_converted_from_numa"
+
+L_INTEGER_VALUE = ConstType("L_INTEGER_VALUE", 1, '''convert to integer ''')
+L_FLOAT_VALUE = ConstType("L_FLOAT_VALUE", 2, '''convert to float ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+         bmf.h
      Simple data structure to hold bitmap fonts and related data
 /
 
@@ -151,7 +171,7 @@ class ConstType(Const):
 /
 
 ------------------------------------------------------------------------*
-                   Simple search state variables                        *
+                    Simple search state variables                       *
 ------------------------------------------------------------------------*/
 enum {
     L_NOT_FOUND = 0,
@@ -163,6 +183,92 @@ ConstType.__name__ = "to_control_conditional_compilation,_one_of_two_variables"
 
 L_NOT_FOUND = ConstType("L_NOT_FOUND", 0, ''' ''')
 L_FOUND = ConstType("L_FOUND", 1, ''' ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       ------------------------------------------------------------------------*
+                     Path separator conversion                          *
+------------------------------------------------------------------------*/
+enum {
+    UNIX_PATH_SEPCHAR = 0,
+    WIN_PATH_SEPCHAR = 1
+}
+    '''
+
+ConstType.__name__ = "path_separator_conversion"
+
+UNIX_PATH_SEPCHAR = ConstType("UNIX_PATH_SEPCHAR", 0, ''' ''')
+WIN_PATH_SEPCHAR = ConstType("WIN_PATH_SEPCHAR", 1, ''' ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       ------------------------------------------------------------------------*
+         Control printing of error, warning, and info messages          *
+                                                                        *
+  To omit all messages to stderr, simply define NO_CONSOLE_IO on the    *
+  command line.  For finer grained control, we have a mechanism         *
+  based on the message severity level.  The following assumes that      *
+  NO_CONSOLE_IO is not defined.                                         *
+                                                                        *
+  Messages are printed if the message severity is greater than or equal *
+  to the current severity threshold.  The current severity threshold    *
+  is the greater of the compile-time severity, which is the minimum     *
+  severity that can be reported, and the run-time severity, which is    *
+  the severity threshold at the moment.                                 *
+                                                                        *
+  The compile-time threshold determines which messages are compiled     *
+  into the library for potential printing.  Messages below the          *
+  compile-time threshold are omitted and can never be printed.  The     *
+  default compile-time threshold is L_SEVERITY_INFO, but this may be    *
+  overridden by defining MINIMUM_SEVERITY to the desired enumeration    *
+  identifier on the compiler command line.  Defining NO_CONSOLE_IO on   *
+  the command line is the same as setting MINIMUM_SEVERITY to           *
+  L_SEVERITY_NONE.                                                      *
+                                                                        *
+  The run-time threshold determines which messages are printed during   *
+  library execution.  It defaults to the compile-time threshold but     *
+  may be changed either statically by defining DEFAULT_SEVERITY to      *
+  the desired enumeration identifier on the compiler command line, or   *
+  dynamically by calling setMsgSeverity() to specify a new threshold.   *
+  The run-time threshold may also be set from the value of the          *
+  environment variable LEPT_MSG_SEVERITY by calling setMsgSeverity()   *
+  and specifying L_SEVERITY_EXTERNAL.                                   *
+                                                                        *
+  In effect, the compile-time threshold setting says, "Generate code    *
+  to permit messages of equal or greater severity than this to be       *
+  printed, if desired," whereas the run-time threshold setting says,    *
+  "Print messages that have an equal or greater severity than this."    *
+------------------------------------------------------------------------*/
+enum {
+    L_SEVERITY_EXTERNAL = 0,   /* Get the severity from the environment   */
+    L_SEVERITY_ALL      = 1,   /* Lowest severity: print all messages     */
+    L_SEVERITY_DEBUG    = 2,   /* Print debugging and higher messages     */
+    L_SEVERITY_INFO     = 3,   /* Print informational and higher messages */
+    L_SEVERITY_WARNING  = 4,   /* Print warning and higher messages       */
+    L_SEVERITY_ERROR    = 5,   /* Print error and higher messages         */
+    L_SEVERITY_NONE     = 6    /* Highest severity: print no messages     */
+}
+    '''
+
+ConstType.__name__ = "control_printing_of_error,_warning,_and_info_messages"
+
+L_SEVERITY_EXTERNAL = ConstType("L_SEVERITY_EXTERNAL", 0, '''Get the severity from the environment ''')
+L_SEVERITY_ALL = ConstType("L_SEVERITY_ALL", 1, '''Lowest severity: print all messages ''')
+L_SEVERITY_DEBUG = ConstType("L_SEVERITY_DEBUG", 2, '''Print debugging and higher messages ''')
+L_SEVERITY_INFO = ConstType("L_SEVERITY_INFO", 3, '''Print informational and higher messages ''')
+L_SEVERITY_WARNING = ConstType("L_SEVERITY_WARNING", 4, '''Print warning and higher messages ''')
+L_SEVERITY_ERROR = ConstType("L_SEVERITY_ERROR", 5, '''Print error and higher messages ''')
+L_SEVERITY_NONE = ConstType("L_SEVERITY_NONE", 6, '''Highest severity: print no messages ''')
 
 
 del ConstType
@@ -245,7 +351,6 @@ class ConstType(Const):
     '''
         ------------------ Image file format types -------------- */
 
-  
   The IFF_DEFAULT flag is used to write the file out in the
   same (input) file format that the pix was read from.  If the pix
   was not read from file, the input format field will be
@@ -275,8 +380,9 @@ enum {
     IFF_GIF            = 13,
     IFF_JP2            = 14,
     IFF_WEBP           = 15,
-    IFF_DEFAULT        = 16,
-    IFF_SPIX           = 17
+    IFF_LPDF           = 16,
+    IFF_DEFAULT        = 17,
+    IFF_SPIX           = 18
 }
     '''
 
@@ -298,8 +404,9 @@ IFF_PS = ConstType("IFF_PS", 12, ''' ''')
 IFF_GIF = ConstType("IFF_GIF", 13, ''' ''')
 IFF_JP2 = ConstType("IFF_JP2", 14, ''' ''')
 IFF_WEBP = ConstType("IFF_WEBP", 15, ''' ''')
-IFF_DEFAULT = ConstType("IFF_DEFAULT", 16, ''' ''')
-IFF_SPIX = ConstType("IFF_SPIX", 17, ''' ''')
+IFF_LPDF = ConstType("IFF_LPDF", 16, ''' ''')
+IFF_DEFAULT = ConstType("IFF_DEFAULT", 17, ''' ''')
+IFF_SPIX = ConstType("IFF_SPIX", 18, ''' ''')
 
 
 del ConstType
@@ -308,7 +415,7 @@ del ConstType
 
 class ConstType(Const):
     '''
-        ------------------ Format header ids --------------- */
+        ---------------------- Format header ids --------------------- */
 enum {
     BMP_ID             = 0x4d42,
     TIFF_BIGEND_ID     = 0x4d4d,     /* MM - for 'motorola' */
@@ -329,15 +436,61 @@ del ConstType
 
 class ConstType(Const):
     '''
-        ------------------ Gray hinting in jpeg reader --------------- */
+        ------------- Hinting bit flags in jpeg reader --------------- */
 enum {
-    L_HINT_GRAY = 1,  /* only want grayscale information */
+    L_JPEG_READ_LUMINANCE = 1,  /* only want luminance data; no chroma */
+    L_JPEG_FAIL_ON_BAD_DATA = 2  /* don't return possibly damaged pix */
 }
     '''
 
-ConstType.__name__ = "gray_hinting_in_jpeg_reader"
+ConstType.__name__ = "hinting_bit_flags_in_jpeg_reader"
 
-L_HINT_GRAY = ConstType("L_HINT_GRAY", 1, '''only want grayscale information ''')
+L_JPEG_READ_LUMINANCE = ConstType("L_JPEG_READ_LUMINANCE", 1, '''only want luminance data; no chroma ''')
+L_JPEG_FAIL_ON_BAD_DATA = ConstType("L_JPEG_FAIL_ON_BAD_DATA", 2, '''don't return possibly damaged pix ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+        ------------------ Pdf formated encoding types --------------- */
+enum {
+    L_JPEG_ENCODE   = 1,    /* use dct encoding: 8 and 32 bpp, no cmap     */
+    L_G4_ENCODE     = 2,    /* use ccitt g4 fax encoding: 1 bpp            */
+    L_FLATE_ENCODE  = 3,    /* use flate encoding: any depth, cmap ok      */
+    L_JP2K_ENCODE  = 4      /* use jp2k encoding: 8 and 32 bpp, no cmap    */
+}
+    '''
+
+ConstType.__name__ = "pdf_formated_encoding_types"
+
+L_JPEG_ENCODE = ConstType("L_JPEG_ENCODE", 1, '''use dct encoding: 8 and 32 bpp, no cmap ''')
+L_G4_ENCODE = ConstType("L_G4_ENCODE", 2, '''use ccitt g4 fax encoding: 1 bpp ''')
+L_FLATE_ENCODE = ConstType("L_FLATE_ENCODE", 3, '''use flate encoding: any depth, cmap ok ''')
+L_JP2K_ENCODE = ConstType("L_JP2K_ENCODE", 4, '''use jp2k encoding: 8 and 32 bpp, no cmap ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+        ------------------------ Pdf multi-image flags ------------------------ */
+enum {
+    L_FIRST_IMAGE   = 1,    /* first image to be used                      */
+    L_NEXT_IMAGE    = 2,    /* intermediate image; not first or last       */
+    L_LAST_IMAGE    = 3     /* last image to be used                       */
+}
+    '''
+
+ConstType.__name__ = "pdf_multi-image_flags"
+
+L_FIRST_IMAGE = ConstType("L_FIRST_IMAGE", 1, '''first image to be used ''')
+L_NEXT_IMAGE = ConstType("L_NEXT_IMAGE", 2, '''intermediate image; not first or last ''')
+L_LAST_IMAGE = ConstType("L_LAST_IMAGE", 3, '''last image to be used ''')
 
 
 del ConstType
@@ -679,14 +832,14 @@ class ConstType(Const):
       (1) These are the byte indices for colors in 32 bpp images.
           They are used through the GET/SET_DATA_BYTE accessors.
           The 4th byte, typically known as the "alpha channel" and used
-          for blending, is not explicitly used in leptonica.
-      (2) If you redefine these values, functions that have the shifts
-          hardcoded (instead of using the constants below) will break.
-          These functions are labelled with "***" next to their names
-          at the top of the files in which they are defined.
-          Advice: Do not change these values!
-      (3) The shifts to extract the red, green and blue components
-          from a 32 bit pixel are defined in terms of these colors.
+          for blending, is used to a small extent in leptonica.
+      (2) Do not change these values!  If you redefine them, functions
+          that have the shifts hardcoded for efficiency and conciseness
+          (instead of using the constants below) will break.  These
+          functions are labelled with "***"  next to their names at
+          the top of the files in which they are defined.
+      (3) The shifts to extract the red, green, blue and alpha components
+          from a 32 bit pixel are defined here.
 /
 enum {
     COLOR_RED = 0,
@@ -717,7 +870,8 @@ enum {
     REMOVE_CMAP_TO_BINARY = 0,
     REMOVE_CMAP_TO_GRAYSCALE = 1,
     REMOVE_CMAP_TO_FULL_COLOR = 2,
-    REMOVE_CMAP_BASED_ON_SRC = 3
+    REMOVE_CMAP_WITH_ALPHA = 3,
+    REMOVE_CMAP_BASED_ON_SRC = 4
 }
     '''
 
@@ -726,7 +880,8 @@ ConstType.__name__ = "flags_for_colormap_conversion"
 REMOVE_CMAP_TO_BINARY = ConstType("REMOVE_CMAP_TO_BINARY", 0, ''' ''')
 REMOVE_CMAP_TO_GRAYSCALE = ConstType("REMOVE_CMAP_TO_GRAYSCALE", 1, ''' ''')
 REMOVE_CMAP_TO_FULL_COLOR = ConstType("REMOVE_CMAP_TO_FULL_COLOR", 2, ''' ''')
-REMOVE_CMAP_BASED_ON_SRC = ConstType("REMOVE_CMAP_BASED_ON_SRC", 3, ''' ''')
+REMOVE_CMAP_WITH_ALPHA = ConstType("REMOVE_CMAP_WITH_ALPHA", 3, ''' ''')
+REMOVE_CMAP_BASED_ON_SRC = ConstType("REMOVE_CMAP_BASED_ON_SRC", 4, ''' ''')
 
 
 del ConstType
@@ -796,12 +951,30 @@ class ConstType(Const):
                               Sort flags                                  *
 --------------------------------------------------------------------------*/
 enum {
+    L_SHELL_SORT = 1,             /* use shell sort                         */
+    L_BIN_SORT = 2                /* use bin sort                           */
+}
+    '''
+
+ConstType.__name__ = "copyflag_value_in_sarraygetstring()"
+
+L_SHELL_SORT = ConstType("L_SHELL_SORT", 1, '''use shell sort ''')
+L_BIN_SORT = ConstType("L_BIN_SORT", 2, '''use bin sort ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       enum {
     L_SORT_INCREASING = 1,        /* sort in increasing order               */
     L_SORT_DECREASING = 2         /* sort in decreasing order               */
 }
     '''
 
-ConstType.__name__ = "copyflag_value_in_sarraygetstring()"
+ConstType.__name__ = "generated_constants"
 
 L_SORT_INCREASING = ConstType("L_SORT_INCREASING", 1, '''sort in increasing order ''')
 L_SORT_DECREASING = ConstType("L_SORT_DECREASING", 2, '''sort in decreasing order ''')
@@ -814,22 +987,26 @@ del ConstType
 class ConstType(Const):
     '''
        enum {
-    L_SORT_BY_X = 3,              /* sort box or c.c. by horiz location     */
-    L_SORT_BY_Y = 4,              /* sort box or c.c. by vert location      */
-    L_SORT_BY_WIDTH = 5,          /* sort box or c.c. by width              */
-    L_SORT_BY_HEIGHT = 6,         /* sort box or c.c. by height             */
-    L_SORT_BY_MIN_DIMENSION = 7,  /* sort box or c.c. by min dimension      */
-    L_SORT_BY_MAX_DIMENSION = 8,  /* sort box or c.c. by max dimension      */
-    L_SORT_BY_PERIMETER = 9,      /* sort box or c.c. by perimeter          */
-    L_SORT_BY_AREA = 10,          /* sort box or c.c. by area               */
-    L_SORT_BY_ASPECT_RATIO = 11   /* sort box or c.c. by width/height ratio */
+    L_SORT_BY_X = 1,              /* sort box or c.c. by left edge location  */
+    L_SORT_BY_Y = 2,              /* sort box or c.c. by top edge location   */
+    L_SORT_BY_RIGHT = 3,          /* sort box or c.c. by right edge location */
+    L_SORT_BY_BOT = 4,            /* sort box or c.c. by bot edge location   */
+    L_SORT_BY_WIDTH = 5,          /* sort box or c.c. by width               */
+    L_SORT_BY_HEIGHT = 6,         /* sort box or c.c. by height              */
+    L_SORT_BY_MIN_DIMENSION = 7,  /* sort box or c.c. by min dimension       */
+    L_SORT_BY_MAX_DIMENSION = 8,  /* sort box or c.c. by max dimension       */
+    L_SORT_BY_PERIMETER = 9,      /* sort box or c.c. by perimeter           */
+    L_SORT_BY_AREA = 10,          /* sort box or c.c. by area                */
+    L_SORT_BY_ASPECT_RATIO = 11   /* sort box or c.c. by width/height ratio  */
 }
     '''
 
 ConstType.__name__ = "generated_constants"
 
-L_SORT_BY_X = ConstType("L_SORT_BY_X", 3, '''sort box or c.c. by horiz location ''')
-L_SORT_BY_Y = ConstType("L_SORT_BY_Y", 4, '''sort box or c.c. by vert location ''')
+L_SORT_BY_X = ConstType("L_SORT_BY_X", 1, '''sort box or c.c. by left edge location ''')
+L_SORT_BY_Y = ConstType("L_SORT_BY_Y", 2, '''sort box or c.c. by top edge location ''')
+L_SORT_BY_RIGHT = ConstType("L_SORT_BY_RIGHT", 3, '''sort box or c.c. by right edge location ''')
+L_SORT_BY_BOT = ConstType("L_SORT_BY_BOT", 4, '''sort box or c.c. by bot edge location ''')
 L_SORT_BY_WIDTH = ConstType("L_SORT_BY_WIDTH", 5, '''sort box or c.c. by width ''')
 L_SORT_BY_HEIGHT = ConstType("L_SORT_BY_HEIGHT", 6, '''sort box or c.c. by height ''')
 L_SORT_BY_MIN_DIMENSION = ConstType("L_SORT_BY_MIN_DIMENSION", 7, '''sort box or c.c. by min dimension ''')
@@ -969,7 +1146,8 @@ enum {
     L_SELECT_GREEN = 2,           /* use green component                   */
     L_SELECT_BLUE = 3,            /* use blue component                    */
     L_SELECT_MIN = 4,             /* use min color component               */
-    L_SELECT_MAX = 5              /* use max color component               */
+    L_SELECT_MAX = 5,             /* use max color component               */
+    L_SELECT_AVERAGE = 6          /* use average of color components       */
 }
     '''
 
@@ -980,6 +1158,30 @@ L_SELECT_GREEN = ConstType("L_SELECT_GREEN", 2, '''use green component ''')
 L_SELECT_BLUE = ConstType("L_SELECT_BLUE", 3, '''use blue component ''')
 L_SELECT_MIN = ConstType("L_SELECT_MIN", 4, '''use min color component ''')
 L_SELECT_MAX = ConstType("L_SELECT_MAX", 5, '''use max color component ''')
+L_SELECT_AVERAGE = ConstType("L_SELECT_AVERAGE", 6, '''use average of color components ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+                         16-bit conversion flags                         *
+-------------------------------------------------------------------------*/
+enum {
+    L_LS_BYTE = 0,                /* use LSB                               */
+    L_MS_BYTE = 1,                /* use MSB                               */
+    L_CLIP_TO_255 = 2             /* use max(val, 255)                     */
+}
+    '''
+
+ConstType.__name__ = "16-bit_conversion_flags"
+
+L_LS_BYTE = ConstType("L_LS_BYTE", 0, '''use LSB ''')
+L_MS_BYTE = ConstType("L_MS_BYTE", 1, '''use MSB ''')
+L_CLIP_TO_255 = ConstType("L_CLIP_TO_255", 2, '''use max(val, 255) ''')
 
 
 del ConstType
@@ -1077,7 +1279,7 @@ del ConstType
 class ConstType(Const):
     '''
        -------------------------------------------------------------------------*
-                         Grayscale fill flags                            *
+                       Grayscale filling flags                           *
 -------------------------------------------------------------------------*/
 enum {
     L_FILL_WHITE = 1,           /* fill white pixels (e.g, in fg map)      */
@@ -1085,10 +1287,73 @@ enum {
 }
     '''
 
-ConstType.__name__ = "grayscale_fill_flags"
+ConstType.__name__ = "grayscale_filling_flags"
 
 L_FILL_WHITE = ConstType("L_FILL_WHITE", 1, '''fill white pixels (e.g, in fg map) ''')
 L_FILL_BLACK = ConstType("L_FILL_BLACK", 2, '''fill black pixels (e.g., in bg map) ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+                   Flags for setting to white or black                   *
+-------------------------------------------------------------------------*/
+enum {
+    L_SET_WHITE = 1,           /* set pixels to white                      */
+    L_SET_BLACK = 2            /* set pixels to black                      */
+}
+    '''
+
+ConstType.__name__ = "flags_for_setting_to_white_or_black"
+
+L_SET_WHITE = ConstType("L_SET_WHITE", 1, '''set pixels to white ''')
+L_SET_BLACK = ConstType("L_SET_BLACK", 2, '''set pixels to black ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+                  Flags for getting white or black value                 *
+-------------------------------------------------------------------------*/
+enum {
+    L_GET_WHITE_VAL = 1,       /* get white pixel value                    */
+    L_GET_BLACK_VAL = 2        /* get black pixel value                    */
+}
+    '''
+
+ConstType.__name__ = "flags_for_getting_white_or_black_value"
+
+L_GET_WHITE_VAL = ConstType("L_GET_WHITE_VAL", 1, '''get white pixel value ''')
+L_GET_BLACK_VAL = ConstType("L_GET_BLACK_VAL", 2, '''get black pixel value ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+                  Flags for 8 bit and 16 bit pixel sums                  *
+-------------------------------------------------------------------------*/
+enum {
+    L_WHITE_IS_MAX = 1,   /* white pixels are 0xff or 0xffff; black are 0  */
+    L_BLACK_IS_MAX = 2    /* black pixels are 0xff or 0xffff; white are 0  */
+}
+    '''
+
+ConstType.__name__ = "flags_for_8_bit_and_16_bit_pixel_sums"
+
+L_WHITE_IS_MAX = ConstType("L_WHITE_IS_MAX", 1, '''white pixels are 0xff or 0xffff; black are 0 ''')
+L_BLACK_IS_MAX = ConstType("L_BLACK_IS_MAX", 2, '''black pixels are 0xff or 0xffff; white are 0 ''')
 
 
 del ConstType
@@ -1281,7 +1546,12 @@ enum {
     L_FROM_LEFT = 0,           /* scan from left                           */
     L_FROM_RIGHT = 1,          /* scan from right                          */
     L_FROM_TOP = 2,            /* scan from top                            */
-    L_FROM_BOTTOM = 3          /* scan from bottom                         */
+    L_FROM_BOT = 3,            /* scan from bottom                         */
+    L_SCAN_NEGATIVE = 4,       /* scan in negative direction               */
+    L_SCAN_POSITIVE = 5,       /* scan in positive direction               */
+    L_SCAN_BOTH = 6,           /* scan in both directions                  */
+    L_SCAN_HORIZONTAL = 7,     /* horizontal scan (direction unimportant)  */
+    L_SCAN_VERTICAL = 8        /* vertical scan (direction unimportant)    */
 }
     '''
 
@@ -1290,7 +1560,107 @@ ConstType.__name__ = "scan_direction_flags"
 L_FROM_LEFT = ConstType("L_FROM_LEFT", 0, '''scan from left ''')
 L_FROM_RIGHT = ConstType("L_FROM_RIGHT", 1, '''scan from right ''')
 L_FROM_TOP = ConstType("L_FROM_TOP", 2, '''scan from top ''')
-L_FROM_BOTTOM = ConstType("L_FROM_BOTTOM", 3, '''scan from bottom ''')
+L_FROM_BOT = ConstType("L_FROM_BOT", 3, '''scan from bottom ''')
+L_SCAN_NEGATIVE = ConstType("L_SCAN_NEGATIVE", 4, '''scan in negative direction ''')
+L_SCAN_POSITIVE = ConstType("L_SCAN_POSITIVE", 5, '''scan in positive direction ''')
+L_SCAN_BOTH = ConstType("L_SCAN_BOTH", 6, '''scan in both directions ''')
+L_SCAN_HORIZONTAL = ConstType("L_SCAN_HORIZONTAL", 7, '''horizontal scan (direction unimportant) ''')
+L_SCAN_VERTICAL = ConstType("L_SCAN_VERTICAL", 8, '''vertical scan (direction unimportant) ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+                Box size adjustment and location flags                   *
+-------------------------------------------------------------------------*/
+enum {
+    L_ADJUST_SKIP = 0,             /* do not adjust                        */
+    L_ADJUST_LEFT = 1,             /* adjust left edge                     */
+    L_ADJUST_RIGHT = 2,            /* adjust right edge                    */
+    L_ADJUST_LEFT_AND_RIGHT = 3,   /* adjust both left and right edges     */
+    L_ADJUST_TOP = 4,              /* adjust top edge                      */
+    L_ADJUST_BOT = 5,              /* adjust bottom edge                   */
+    L_ADJUST_TOP_AND_BOT = 6,      /* adjust both top and bottom edges     */
+    L_ADJUST_CHOOSE_MIN = 7,       /* choose the min median value          */
+    L_ADJUST_CHOOSE_MAX = 8,       /* choose the max median value          */
+    L_SET_LEFT = 9,                /* set left side to a given value       */
+    L_SET_RIGHT = 10,              /* set right side to a given value      */
+    L_SET_TOP = 11,                /* set top side to a given value        */
+    L_SET_BOT = 12,                /* set bottom side to a given value     */
+    L_GET_LEFT = 13,               /* get left side location               */
+    L_GET_RIGHT = 14,              /* get right side location              */
+    L_GET_TOP = 15,                /* get top side location                */
+    L_GET_BOT = 16                 /* get bottom side location             */
+}
+    '''
+
+ConstType.__name__ = "box_size_adjustment_and_location_flags"
+
+L_ADJUST_SKIP = ConstType("L_ADJUST_SKIP", 0, '''do not adjust ''')
+L_ADJUST_LEFT = ConstType("L_ADJUST_LEFT", 1, '''adjust left edge ''')
+L_ADJUST_RIGHT = ConstType("L_ADJUST_RIGHT", 2, '''adjust right edge ''')
+L_ADJUST_LEFT_AND_RIGHT = ConstType("L_ADJUST_LEFT_AND_RIGHT", 3, '''adjust both left and right edges ''')
+L_ADJUST_TOP = ConstType("L_ADJUST_TOP", 4, '''adjust top edge ''')
+L_ADJUST_BOT = ConstType("L_ADJUST_BOT", 5, '''adjust bottom edge ''')
+L_ADJUST_TOP_AND_BOT = ConstType("L_ADJUST_TOP_AND_BOT", 6, '''adjust both top and bottom edges ''')
+L_ADJUST_CHOOSE_MIN = ConstType("L_ADJUST_CHOOSE_MIN", 7, '''choose the min median value ''')
+L_ADJUST_CHOOSE_MAX = ConstType("L_ADJUST_CHOOSE_MAX", 8, '''choose the max median value ''')
+L_SET_LEFT = ConstType("L_SET_LEFT", 9, '''set left side to a given value ''')
+L_SET_RIGHT = ConstType("L_SET_RIGHT", 10, '''set right side to a given value ''')
+L_SET_TOP = ConstType("L_SET_TOP", 11, '''set top side to a given value ''')
+L_SET_BOT = ConstType("L_SET_BOT", 12, '''set bottom side to a given value ''')
+L_GET_LEFT = ConstType("L_GET_LEFT", 13, '''get left side location ''')
+L_GET_RIGHT = ConstType("L_GET_RIGHT", 14, '''get right side location ''')
+L_GET_TOP = ConstType("L_GET_TOP", 15, '''get top side location ''')
+L_GET_BOT = ConstType("L_GET_BOT", 16, '''get bottom side location ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+          Flags for selecting box boundaries from two choices            *
+-------------------------------------------------------------------------*/
+enum {
+    L_USE_MINSIZE = 1,             /* use boundaries giving min size       */
+    L_USE_MAXSIZE = 2,             /* use boundaries giving max size       */
+    L_SUB_ON_BIG_DIFF = 3          /* substitute boundary if big abs diff  */
+}
+    '''
+
+ConstType.__name__ = "flags_for_selecting_box_boundaries_from_two_choices"
+
+L_USE_MINSIZE = ConstType("L_USE_MINSIZE", 1, '''use boundaries giving min size ''')
+L_USE_MAXSIZE = ConstType("L_USE_MAXSIZE", 2, '''use boundaries giving max size ''')
+L_SUB_ON_BIG_DIFF = ConstType("L_SUB_ON_BIG_DIFF", 3, '''substitute boundary if big abs diff ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+              Handling overlapping bounding boxes in boxa                *
+-------------------------------------------------------------------------*/
+enum {
+    L_COMBINE = 1,           /* resize to bounding region; remove smaller  */
+    L_REMOVE_SMALL = 2       /* only remove smaller                        */
+}
+    '''
+
+ConstType.__name__ = "handling_overlapping_bounding_boxes_in_boxa"
+
+L_COMBINE = ConstType("L_COMBINE", 1, '''resize to bounding region; remove smaller ''')
+L_REMOVE_SMALL = ConstType("L_REMOVE_SMALL", 2, '''only remove smaller ''')
 
 
 del ConstType
@@ -1423,27 +1793,6 @@ del ConstType
 class ConstType(Const):
     '''
        -------------------------------------------------------------------------*
-          Handling negative values in conversion to unsigned int         *
--------------------------------------------------------------------------*/
-enum {
-    L_CLIP_TO_ZERO = 1,        /* Clip negative values to 0                */
-    L_TAKE_ABSVAL = 2          /* Convert to positive using L_ABS()        */
-}
-    '''
-
-ConstType.__name__ = "handling_negative_values_in_conversion_to_unsigned_int"
-
-L_CLIP_TO_ZERO = ConstType("L_CLIP_TO_ZERO", 1, '''Clip negative values to 0 ''')
-L_TAKE_ABSVAL = ConstType("L_TAKE_ABSVAL", 2, '''Convert to positive using L_ABS() ''')
-
-
-del ConstType
-
-
-
-class ConstType(Const):
-    '''
-       -------------------------------------------------------------------------*
              Subpixel color component ordering in LCD display            *
 -------------------------------------------------------------------------*/
 enum {
@@ -1460,29 +1809,6 @@ L_SUBPIXEL_ORDER_RGB = ConstType("L_SUBPIXEL_ORDER_RGB", 1, '''sensor order left
 L_SUBPIXEL_ORDER_BGR = ConstType("L_SUBPIXEL_ORDER_BGR", 2, '''sensor order left-to-right BGR ''')
 L_SUBPIXEL_ORDER_VRGB = ConstType("L_SUBPIXEL_ORDER_VRGB", 3, '''sensor order top-to-bottom RGB ''')
 L_SUBPIXEL_ORDER_VBGR = ConstType("L_SUBPIXEL_ORDER_VBGR", 4, '''sensor order top-to-bottom BGR ''')
-
-
-del ConstType
-
-
-
-class ConstType(Const):
-    '''
-       -------------------------------------------------------------------------*
-                         Relative to zero flags                          *
--------------------------------------------------------------------------*/
-enum {
-    L_LESS_THAN_ZERO = 1,      /* Choose values less than zero             */
-    L_EQUAL_TO_ZERO = 2,       /* Choose values equal to zero              */
-    L_GREATER_THAN_ZERO = 3    /* Choose values greater than zero          */
-}
-    '''
-
-ConstType.__name__ = "relative_to_zero_flags"
-
-L_LESS_THAN_ZERO = ConstType("L_LESS_THAN_ZERO", 1, '''Choose values less than zero ''')
-L_EQUAL_TO_ZERO = ConstType("L_EQUAL_TO_ZERO", 2, '''Choose values equal to zero ''')
-L_GREATER_THAN_ZERO = ConstType("L_GREATER_THAN_ZERO", 3, '''Choose values greater than zero ''')
 
 
 del ConstType
@@ -1540,18 +1866,55 @@ class ConstType(Const):
 -------------------------------------------------------------------------*/
 enum {
     L_ADD_ABOVE = 1,           /* Add text above the image                 */
-    L_ADD_AT_TOP = 2,          /* Add text over the top of the image       */
-    L_ADD_AT_BOTTOM = 3,       /* Add text over the bottom of the image    */
-    L_ADD_BELOW = 4            /* Add text below the image                 */
+    L_ADD_BELOW = 2,           /* Add text below the image                 */
+    L_ADD_LEFT = 3,            /* Add text to the left of the image        */
+    L_ADD_RIGHT = 4,           /* Add text to the right of the image       */
+    L_ADD_AT_TOP = 5,          /* Add text over the top of the image       */
+    L_ADD_AT_BOT = 6,          /* Add text over the bottom of the image    */
+    L_ADD_AT_LEFT = 7,         /* Add text over left side of the image     */
+    L_ADD_AT_RIGHT = 8         /* Add text over right side of the image    */
 }
     '''
 
 ConstType.__name__ = "flags_for_adding_text_to_a_pix"
 
 L_ADD_ABOVE = ConstType("L_ADD_ABOVE", 1, '''Add text above the image ''')
-L_ADD_AT_TOP = ConstType("L_ADD_AT_TOP", 2, '''Add text over the top of the image ''')
-L_ADD_AT_BOTTOM = ConstType("L_ADD_AT_BOTTOM", 3, '''Add text over the bottom of the image ''')
-L_ADD_BELOW = ConstType("L_ADD_BELOW", 4, '''Add text below the image ''')
+L_ADD_BELOW = ConstType("L_ADD_BELOW", 2, '''Add text below the image ''')
+L_ADD_LEFT = ConstType("L_ADD_LEFT", 3, '''Add text to the left of the image ''')
+L_ADD_RIGHT = ConstType("L_ADD_RIGHT", 4, '''Add text to the right of the image ''')
+L_ADD_AT_TOP = ConstType("L_ADD_AT_TOP", 5, '''Add text over the top of the image ''')
+L_ADD_AT_BOT = ConstType("L_ADD_AT_BOT", 6, '''Add text over the bottom of the image ''')
+L_ADD_AT_LEFT = ConstType("L_ADD_AT_LEFT", 7, '''Add text over left side of the image ''')
+L_ADD_AT_RIGHT = ConstType("L_ADD_AT_RIGHT", 8, '''Add text over right side of the image ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+                       Flags for plotting on a pix                       *
+-------------------------------------------------------------------------*/
+enum {
+    L_PLOT_AT_TOP = 1,         /* Plot horizontally at top                 */
+    L_PLOT_AT_MID_HORIZ = 2,   /* Plot horizontally at middle              */
+    L_PLOT_AT_BOT = 3,         /* Plot horizontally at bottom              */
+    L_PLOT_AT_LEFT = 4,        /* Plot vertically at left                  */
+    L_PLOT_AT_MID_VERT = 5,    /* Plot vertically at middle                */
+    L_PLOT_AT_RIGHT = 6        /* Plot vertically at right                 */
+}
+    '''
+
+ConstType.__name__ = "flags_for_plotting_on_a_pix"
+
+L_PLOT_AT_TOP = ConstType("L_PLOT_AT_TOP", 1, '''Plot horizontally at top ''')
+L_PLOT_AT_MID_HORIZ = ConstType("L_PLOT_AT_MID_HORIZ", 2, '''Plot horizontally at middle ''')
+L_PLOT_AT_BOT = ConstType("L_PLOT_AT_BOT", 3, '''Plot horizontally at bottom ''')
+L_PLOT_AT_LEFT = ConstType("L_PLOT_AT_LEFT", 4, '''Plot vertically at left ''')
+L_PLOT_AT_MID_VERT = ConstType("L_PLOT_AT_MID_VERT", 5, '''Plot vertically at middle ''')
+L_PLOT_AT_RIGHT = ConstType("L_PLOT_AT_RIGHT", 6, '''Plot vertically at right ''')
 
 
 del ConstType
@@ -1564,19 +1927,107 @@ class ConstType(Const):
                    Flags for selecting display program                   *
 -------------------------------------------------------------------------*/
 enum {
-    L_DISPLAY_WITH_XV = 1,      /* Use xv with pixDisplay()                */
+    L_DISPLAY_WITH_XZGV = 1,    /* Use xzgv with pixDisplay()              */
     L_DISPLAY_WITH_XLI = 2,     /* Use xli with pixDisplay()               */
-    L_DISPLAY_WITH_XZGV = 3,    /* Use xzgv with pixDisplay()              */
-    L_DISPLAY_WITH_IV = 4       /* Use irfvanview with pixDisplay()        */
+    L_DISPLAY_WITH_XV = 3,      /* Use xv with pixDisplay()                */
+    L_DISPLAY_WITH_IV = 4,      /* Use irfvanview (win) with pixDisplay()  */
+    L_DISPLAY_WITH_OPEN = 5     /* Use open (apple) with pixDisplay()      */
 }
     '''
 
 ConstType.__name__ = "flags_for_selecting_display_program"
 
-L_DISPLAY_WITH_XV = ConstType("L_DISPLAY_WITH_XV", 1, '''Use xv with pixDisplay() ''')
+L_DISPLAY_WITH_XZGV = ConstType("L_DISPLAY_WITH_XZGV", 1, '''Use xzgv with pixDisplay() ''')
 L_DISPLAY_WITH_XLI = ConstType("L_DISPLAY_WITH_XLI", 2, '''Use xli with pixDisplay() ''')
-L_DISPLAY_WITH_XZGV = ConstType("L_DISPLAY_WITH_XZGV", 3, '''Use xzgv with pixDisplay() ''')
-L_DISPLAY_WITH_IV = ConstType("L_DISPLAY_WITH_IV", 4, '''Use irfvanview with pixDisplay() ''')
+L_DISPLAY_WITH_XV = ConstType("L_DISPLAY_WITH_XV", 3, '''Use xv with pixDisplay() ''')
+L_DISPLAY_WITH_IV = ConstType("L_DISPLAY_WITH_IV", 4, '''Use irfvanview (win) with pixDisplay() ''')
+L_DISPLAY_WITH_OPEN = ConstType("L_DISPLAY_WITH_OPEN", 5, '''Use open (apple) with pixDisplay() ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+    Flag(s) used in the 'special' pix field for non-default operations   *
+      - 0 is default                                                     *
+      - 10-19 are reserved for zlib compression in png write             *
+-------------------------------------------------------------------------*/
+enum {
+    L_NO_CHROMA_SAMPLING_JPEG = 1     /* Write full resolution chroma      */
+}
+    '''
+
+ConstType.__name__ = "flag(s)_used_in_the_'special'_pix_field_for_non-default_operations"
+
+L_NO_CHROMA_SAMPLING_JPEG = ConstType("L_NO_CHROMA_SAMPLING_JPEG", 1, '''Write full resolution chroma ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+          Handling negative values in conversion to unsigned int         *
+-------------------------------------------------------------------------*/
+enum {
+    L_CLIP_TO_ZERO = 1,        /* Clip negative values to 0                */
+    L_TAKE_ABSVAL = 2          /* Convert to positive using L_ABS()        */
+}
+    '''
+
+ConstType.__name__ = "handling_negative_values_in_conversion_to_unsigned_int"
+
+L_CLIP_TO_ZERO = ConstType("L_CLIP_TO_ZERO", 1, '''Clip negative values to 0 ''')
+L_TAKE_ABSVAL = ConstType("L_TAKE_ABSVAL", 2, '''Convert to positive using L_ABS() ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+                        Relative to zero flags                           *
+-------------------------------------------------------------------------*/
+enum {
+    L_LESS_THAN_ZERO = 1,      /* Choose values less than zero             */
+    L_EQUAL_TO_ZERO = 2,       /* Choose values equal to zero              */
+    L_GREATER_THAN_ZERO = 3    /* Choose values greater than zero          */
+}
+    '''
+
+ConstType.__name__ = "relative_to_zero_flags"
+
+L_LESS_THAN_ZERO = ConstType("L_LESS_THAN_ZERO", 1, '''Choose values less than zero ''')
+L_EQUAL_TO_ZERO = ConstType("L_EQUAL_TO_ZERO", 2, '''Choose values equal to zero ''')
+L_GREATER_THAN_ZERO = ConstType("L_GREATER_THAN_ZERO", 3, '''Choose values greater than zero ''')
+
+
+del ConstType
+
+
+
+class ConstType(Const):
+    '''
+       -------------------------------------------------------------------------*
+         Flags for adding or removing traling slash from string          *
+-------------------------------------------------------------------------*/
+enum {
+    L_ADD_TRAIL_SLASH = 1,     /* Add trailing slash to string             */
+    L_REMOVE_TRAIL_SLASH = 2   /* Remove trailing slash from string        */
+}
+    '''
+
+ConstType.__name__ = "flags_for_adding_or_removing_traling_slash_from_string"
+
+L_ADD_TRAIL_SLASH = ConstType("L_ADD_TRAIL_SLASH", 1, '''Add trailing slash to string ''')
+L_REMOVE_TRAIL_SLASH = ConstType("L_REMOVE_TRAIL_SLASH", 2, '''Remove trailing slash from string ''')
 
 
 del ConstType

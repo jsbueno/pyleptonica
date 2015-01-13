@@ -364,13 +364,14 @@ def order_classes(structs):
     class_list = []
     rendered = set()
     count = 0
+    exceptions = set(("L_TIMER",))
     while True:
         if not structs:
             break
         # copy keys to a real list for p3k compatibility
         for struct in structs.keys()[:]:
             recursive = False
-            pre_reqs = structs[struct][1]
+            pre_reqs = structs[struct][1] - exceptions
             if struct in pre_reqs:
                 pre_reqs = pre_reqs.copy()
                 pre_reqs.remove(struct)
@@ -393,8 +394,8 @@ def main(file_names):
     structs = {}
     for file_name in file_names:
         structs.update(parse_file(lepton_source_dir + file_name))
-    # we are not reading the typedefs, just  ifering the tytpedsf from
-    # the strcuture name, and there are  a few exceptions:
+    # we are not reading the typedefs, just  infering the typedefs from
+    # the structure name, and there are  a few exceptions:
     irregular_names = (("BBUFFER", "BYTEBUFFER"), 
         ("DLLIST", "DOUBLELINKEDLIST"), 
         ("PIXCMAP", "DOUBLELINKEDLIST"),
@@ -404,7 +405,7 @@ def main(file_names):
     render_file(class_list, irregular_names)
 
 
-all_headers = ['bbuffer.h', 'dewarp.h', 'gplot.h', 'pix.h',
+all_headers = ['array.h', 'bbuffer.h', 'gplot.h', 'pix.h', 
 'regutils.h', 'bmf.h', 'heap.h', 'ptra.h', 'stack.h', 'bmp.h',
 'list.h', 'queue.h', 'sudoku.h', 'array.h', 'ccbord.h', 'jbclass.h',
 'morph.h', 'watershed.h']

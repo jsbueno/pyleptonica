@@ -130,7 +130,7 @@ def parse_prototype(prototype_text):
             data_type, name = token.rsplit(None,1)
         except Exception, error:
             sys.stderr.write("Unexpected preample/function declaration."
-                + " Parsing error:\n\n%s\n" % protoype_text)
+                + " Parsing error:\n\n%s\n" % prototype_text)
             raise
         parameters.append((data_type.strip(), name.strip()))
     return return_type, function_name, parameters 
@@ -153,6 +153,8 @@ def parse_functions(text):
         raw_comment, prototype = function.split("*/", 1)
         comment = strip_comment(raw_comment)
         try:
+            if "..." in prototype:
+                continue
             return_type, name, arg_list = parse_prototype(prototype)
             functions[name] = (arg_list, return_type, comment)
         except FunctionNotExported:
@@ -348,11 +350,11 @@ def main(file_names):
     classes = render_modules(modules)
     render_file(classes)
 
-files = ['adaptmap.c', 'colorcontent.c', 'fmorphgenlow.1.c', 
+files = ['adaptmap.c', 'colorcontent.c', 
 'numafunc1.c', 'psio1stub.c', 'sel1.c', 'affine.c', 'colormap.c',
 'fpix1.c', 'numafunc2.c', 'psio2.c', 'sel2.c', 'affinecompose.c', 
 'colormorph.c', 'fpix2.c', 'pageseg.c', 'psio2stub.c', 'selgen.c',
-'arithlow.c', 'colorquant1.c', 'freetype.c', 'paintcmap.c',
+ 'colorquant1.c', 'freetype.c', 'paintcmap.c',
 'ptabasic.c', 'shear.c', 'arrayaccess.c', 'colorquant2.c', 'gifio.c',
 'parseprotos.c', 'ptafunc1.c', 'skew.c', 'arrayaccess.h.vc',
 'colorseg.c', 'gifiostub.c', 'partition.c', 'ptra.c',
@@ -360,27 +362,26 @@ files = ['adaptmap.c', 'colorcontent.c', 'fmorphgenlow.1.c',
 'stack.c', 'baseline.c', 'conncomp.c', 'graphics.c', 'pix2.c', 'rank.c',
 'sudoku.c', 'bbuffer.c', 'convertfiles.c', 'graymorph.c', 'pix3.c',
 'readbarcode.c', 'textops.c', 'bilinear.c', 'convolve.c',
-'graymorphlow.c', 'pix4.c', 'readfile.c', 'tiffio.c', 'binarize.c',
-'convolvelow.c', 'grayquant.c', 'pix5.c', 'regutils.c', 'tiffiostub.c',
-'binexpand.c', 'correlscore.c', 'grayquantlow.c', 'pixabasic.c',
-'rop.c', 'utils.c', 'binexpandlow.c', 'dewarp.c', 'heap.c', 'pixacc.c',
-'ropiplow.c', 'viewfiles.c', 'binreduce.c', 'dwacomb.2.c', 'jbclass.c',
-'pixafunc1.c', 'roplow.c', 'warper.c', 'binreducelow.c',
+'pix4.c', 'readfile.c', 'tiffio.c', 'binarize.c',
+'grayquant.c', 'pix5.c', 'regutils.c', 'tiffiostub.c',
+'binexpand.c', 'correlscore.c', 'pixabasic.c',
+'rop.c', 'utils.c', 'heap.c', 'pixacc.c',
+ 'viewfiles.c', 'binreduce.c', 'dwacomb.2.c', 'jbclass.c',
+'pixafunc1.c', 'warper.c', 
 'dwacomblow.2.c', 'jpegio.c', 'pixafunc2.c', 'rotateam.c',
 'watershed.c', 'blend.c', 'edge.c', 'jpegiostub.c', 'pixalloc.c',
-'rotateamlow.c', 'webpio.c', 'bmf.c', 'endiantest.c', 'kernel.c',
+'webpio.c', 'bmf.c', 'endiantest.c', 'kernel.c',
 'pixarith.c', 'rotate.c', 'webpiostub.c', 'bmpio.c', 'enhance.c',
 'leptwin.c', 'pixcomp.c', 'rotateorth.c', 'writefile.c', 'bmpiostub.c',
-'fhmtauto.c', 'list.c', 'pixconv.c', 'rotateorthlow.c',
+'fhmtauto.c', 'list.c', 'pixconv.c', 
 'xtractprotos.c', 'boxbasic.c', 'fhmtgen.1.c', 'makefile.static',
 'pixtiling.c', 'rotateshear.c', 'zlibmem.c', 'boxfunc1.c',
 'fhmtgenlow.1.c', 'maze.c', 'pngio.c', 'runlength.c', 'zlibmemstub.c',
 'boxfunc2.c', 'finditalic.c', 'morphapp.c', 'pngiostub.c', 'sarray.c',
 'boxfunc3.c', 'flipdetect.c', 'morph.c', 'pnmio.c', 'scale.c',
-'ccbord.c', 'fliphmtgen.c', 'morphdwa.c', 'pnmiostub.c', 'scalelow.c',
+'ccbord.c', 'fliphmtgen.c', 'morphdwa.c', 'pnmiostub.c',
 'ccthin.c', 'fmorphauto.c', 'morphseq.c', 'projective.c', 'seedfill.c',
-'classapp.c', 'fmorphgen.1.c', 'numabasic.c', 'psio1.c',
-'seedfilllow.c']
+'classapp.c', 'fmorphgen.1.c', 'numabasic.c', 'psio1.c']
 
 # Some "perfectly good" functions simply are not exported 
 # as of leptonica 1.6.7
